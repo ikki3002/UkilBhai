@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Linear Dark Palette -->
+    <color name="bg_dark">#040605</color>
+    <color name="surface_card">#0D1210</color>
+    <color name="card_stroke">#272C2A</color>
+    <color name="card_stroke_glow">#334D3F</color>
+
+    <!-- Emerald / Mint Accent Brand Colors -->
+    <color name="primary_emerald">#169A50</color>
+    <color name="mint_accent">#55D396</color>
+    <color name="mint_accent_alpha">#1A55D396</color>
+    <color name="glow_emerald">#169A50</color>
+
+    <!-- Emergency Badges / Accents -->
+    <color name="emergency_red_bg">#1F1113</color>
+    <color name="emergency_red_stroke">#EF4444</color>
+    <color name="emergency_red_text">#F87171</color>
+    
+    <color name="legal_aid_bg">#091A12</color>
+    <color name="legal_aid_stroke">#169A50</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#9CA3AF</color>
+    <color name="text_tertiary">#6B7280</color>
+
+    <!-- Baseline standard colors -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

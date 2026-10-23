@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">উকিল ভাই</string>
+    <string name="tagline">আপনার ডিজিটাল আইনি সহায়ক</string>
+    <string name="search_hint">আপনার আইনি প্রশ্ন লিখুন...</string>
+    <string name="emergency_999">জরুরি সেবা ৯৯৯</string>
+    <string name="emergency_16699">আইনি সহায়তা ১৬৬৯৯</string>
+    <string name="cat_traffic">ট্রাফিক ও সড়ক আইন</string>
+    <string name="cat_traffic_sub">চালকের লাইসেন্স, মামলা ও জরিমানা</string>
+    <string name="cat_family">পারিবারিক ও নারী অধিকার</string>
+    <string name="cat_family_sub">বিয়ে, দেনমোহর, অভিভাবকত্ব ও সুরক্ষা</string>
+    <string name="cat_tenant">বাড়িভাড়া ও সম্পত্তি</string>
+    <string name="cat_tenant_sub">ভাড়া চুক্তি, দলিল ও জমিজমা বিরোধ</string>
+    <string name="cat_penal">সাধারণ ফৌজদারি ধারা</string>
+    <string name="cat_penal_sub">জিডি, এফআইআর ও জামিন সংক্রান্ত তথ্য</string>
+    <string name="btn_ai_chat">এআই পরামর্শ নিন (Chat)</string>
+    <string name="categories_title">আইনি সেবাসমূহ</string>
+</resources>
