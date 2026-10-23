@@ -15,6 +15,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         setupEmergencyButtons();
+        setupAiChatButton();
     }
 
     private void setupEmergencyButtons() {
@@ -28,6 +29,17 @@ public class MainActivity extends AppCompatActivity {
         View btnLegalAid16699 = findViewById(R.id.btnLegalAid16699);
         if (btnLegalAid16699 != null) {
             btnLegalAid16699.setOnClickListener(v -> dialPhoneNumber("16699"));
+        }
+    }
+
+    private void setupAiChatButton() {
+        // Floating Button: "এআই পরামর্শ নিন (Chat)"
+        View fabAiChat = findViewById(R.id.fabAiChat);
+        if (fabAiChat != null) {
+            fabAiChat.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                startActivity(intent);
+            });
         }
     }
 
