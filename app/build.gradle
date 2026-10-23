@@ -2,6 +2,17 @@ plugins {
     id 'com.android.application'
 }
 
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+def geminiApiKey = localProperties.getProperty('GEMINI_API_KEY') ?: ""
+def groqApiKey = localProperties.getProperty('GROQ_API_KEY') ?: ""
+def hfApiKey = localProperties.getProperty('HUGGINGFACE_API_KEY') ?: ""
+
 android {
     namespace 'com.example.ukilbhai'
     compileSdk 32
@@ -14,6 +25,14 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "GEMINI_API_KEY", "\"${geminiApiKey}\""
+        buildConfigField "String", "GROQ_API_KEY", "\"${groqApiKey}\""
+        buildConfigField "String", "HUGGINGFACE_API_KEY", "\"${hfApiKey}\""
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     buildTypes {
@@ -32,6 +51,12 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'com.google.android.material:material:1.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    // Markdown rendering (Bold, Headings, Bullet Lists, Tables)
+    implementation 'io.noties.markwon:core:4.6.2'
+    implementation 'io.noties.markwon:ext-tables:4.6.2'
+    implementation 'io.noties.markwon:ext-strikethrough:4.6.2'
+
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
