@@ -177,7 +177,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Floating Gemini Capsule Dock -->
+        <!-- Floating Gemini Capsule Dock (Borderless) -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardGeminiDock"
             android:layout_width="match_parent"
@@ -185,8 +185,7 @@
             app:cardBackgroundColor="@color/gemini_dock_bg"
             app:cardCornerRadius="28dp"
             app:cardElevation="2dp"
-            app:strokeColor="@color/gemini_dock_stroke"
-            app:strokeWidth="1dp">
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:id="@+id/layoutGeminiInner"
