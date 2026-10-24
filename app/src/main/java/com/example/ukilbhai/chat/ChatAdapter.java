@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -20,11 +21,18 @@ import io.noties.markwon.ext.tables.TablePlugin;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+    public interface OnChatActionListener {
+        void onReadAloud(int position, String text);
+        void onCopy(int position, String text);
+    }
+
     private static final int VIEW_TYPE_USER = 1;
     private static final int VIEW_TYPE_AI = 2;
 
     private final List<ChatMessage> messageList;
-    private Markwon markwon;
+    private final Markwon markwon;
+    private OnChatActionListener actionListener;
+    private int currentlySpeakingPosition = -1;
 
     public ChatAdapter(Context context, List<ChatMessage> messageList) {
         this.messageList = messageList;
@@ -32,6 +40,25 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 .usePlugin(TablePlugin.create(context))
                 .usePlugin(StrikethroughPlugin.create())
                 .build();
+    }
+
+    public void setOnChatActionListener(OnChatActionListener listener) {
+        this.actionListener = listener;
+    }
+
+    public void setCurrentlySpeakingPosition(int position) {
+        int previous = currentlySpeakingPosition;
+        currentlySpeakingPosition = position;
+        if (previous != -1 && previous < messageList.size()) {
+            notifyItemChanged(previous);
+        }
+        if (currentlySpeakingPosition != -1 && currentlySpeakingPosition < messageList.size()) {
+            notifyItemChanged(currentlySpeakingPosition);
+        }
+    }
+
+    public int getCurrentlySpeakingPosition() {
+        return currentlySpeakingPosition;
     }
 
     @Override
@@ -71,10 +98,43 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (message.isError()) {
                 aiHolder.tvMessage.setTextColor(0xFFEF4444); // Error red
                 aiHolder.tvMessage.setText(message.getText());
+                if (aiHolder.layoutAiActions != null) {
+                    aiHolder.layoutAiActions.setVisibility(View.GONE);
+                }
             } else {
                 aiHolder.tvMessage.setTextColor(primaryTextColor);
+                if (aiHolder.layoutAiActions != null) {
+                    aiHolder.layoutAiActions.setVisibility(View.VISIBLE);
+                }
                 // Render rich markdown (bold, lists, headings, and tables)
                 markwon.setMarkdown(aiHolder.tvMessage, message.getText());
+
+                boolean isSpeaking = (position == currentlySpeakingPosition);
+                if (aiHolder.btnReadAloud != null) {
+                    if (isSpeaking) {
+                        aiHolder.btnReadAloud.setImageResource(R.drawable.ic_stop);
+                        aiHolder.btnReadAloud.setColorFilter(ContextCompat.getColor(holder.itemView.getContext(), R.color.mint_accent));
+                        aiHolder.btnReadAloud.setContentDescription("Stop Reading");
+                    } else {
+                        aiHolder.btnReadAloud.setImageResource(R.drawable.ic_speaker);
+                        aiHolder.btnReadAloud.setColorFilter(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_secondary));
+                        aiHolder.btnReadAloud.setContentDescription("Read Aloud");
+                    }
+
+                    aiHolder.btnReadAloud.setOnClickListener(v -> {
+                        if (actionListener != null) {
+                            actionListener.onReadAloud(holder.getAdapterPosition(), message.getText());
+                        }
+                    });
+                }
+
+                if (aiHolder.btnCopyAi != null) {
+                    aiHolder.btnCopyAi.setOnClickListener(v -> {
+                        if (actionListener != null) {
+                            actionListener.onCopy(holder.getAdapterPosition(), message.getText());
+                        }
+                    });
+                }
             }
         }
     }
@@ -95,10 +155,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     static class AiViewHolder extends RecyclerView.ViewHolder {
         TextView tvMessage;
+        View layoutAiActions;
+        ImageButton btnCopyAi;
+        ImageButton btnReadAloud;
 
         AiViewHolder(@NonNull View itemView) {
             super(itemView);
             tvMessage = itemView.findViewById(R.id.tvAiMessage);
+            layoutAiActions = itemView.findViewById(R.id.layoutAiActions);
+            btnCopyAi = itemView.findViewById(R.id.btnCopyAi);
+            btnReadAloud = itemView.findViewById(R.id.btnReadAloud);
         }
     }
 }

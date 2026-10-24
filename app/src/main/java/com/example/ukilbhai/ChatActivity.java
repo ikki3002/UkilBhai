@@ -6,6 +6,8 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -13,6 +15,8 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -50,6 +54,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -99,6 +104,9 @@ public class ChatActivity extends AppCompatActivity {
     private AnimatorSet micPulseAnimatorSet;
     private boolean isShowingSendButton = false;
 
+    private TextToSpeech tts;
+    private boolean isTtsInitialized = false;
+
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(LanguageHelper.applyLocale(newBase));
@@ -112,6 +120,7 @@ public class ChatActivity extends AppCompatActivity {
         setContentView(R.layout.activity_chat);
 
         initViews();
+        initTextToSpeech();
         setupSpeechRecognizer();
         setupRecyclerView();
         setupListeners();
@@ -155,6 +164,49 @@ public class ChatActivity extends AppCompatActivity {
         ivOfflineBannerIcon = findViewById(R.id.ivOfflineBannerIcon);
     }
 
+    private void initTextToSpeech() {
+        tts = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                isTtsInitialized = true;
+                applyTtsLanguage();
+                tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                    @Override
+                    public void onStart(String utteranceId) {}
+
+                    @Override
+                    public void onDone(String utteranceId) {
+                        runOnUiThread(() -> {
+                            if (chatAdapter != null) {
+                                chatAdapter.setCurrentlySpeakingPosition(-1);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(String utteranceId) {
+                        runOnUiThread(() -> {
+                            if (chatAdapter != null) {
+                                chatAdapter.setCurrentlySpeakingPosition(-1);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    private void applyTtsLanguage() {
+        if (tts == null || !isTtsInitialized) return;
+        boolean isBn = LanguageHelper.isBengali(this);
+        Locale targetLocale = isBn ? new Locale("bn", "BD") : Locale.US;
+        int result = tts.setLanguage(targetLocale);
+        if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+            if (isBn) {
+                tts.setLanguage(new Locale("bn"));
+            }
+        }
+    }
+
     private void setupSpeechRecognizer() {
         speechRecognizerLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -179,6 +231,17 @@ public class ChatActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         chatAdapter = new ChatAdapter(this, messageList);
+        chatAdapter.setOnChatActionListener(new ChatAdapter.OnChatActionListener() {
+            @Override
+            public void onReadAloud(int position, String text) {
+                handleReadAloud(position, text);
+            }
+
+            @Override
+            public void onCopy(int position, String text) {
+                handleCopyAiText(text);
+            }
+        });
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
         rvChatMessages.setLayoutManager(layoutManager);
@@ -345,7 +408,74 @@ public class ChatActivity extends AppCompatActivity {
             cardActionButton.setContentDescription(isBn ? "পাঠান" : "Send");
         }
 
+        applyTtsLanguage();
         updateConnectivityUI();
+    }
+
+    private void handleReadAloud(int position, String rawText) {
+        if (!isTtsInitialized || tts == null) {
+            boolean isBn = LanguageHelper.isBengali(this);
+            Toast.makeText(this, isBn
+                    ? "ভয়েস রিডিং ইঞ্জিন প্রস্তুত হচ্ছে..."
+                    : "Text-to-speech engine initializing...", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Toggle: if currently reading this position, stop it
+        if (chatAdapter != null && chatAdapter.getCurrentlySpeakingPosition() == position) {
+            tts.stop();
+            chatAdapter.setCurrentlySpeakingPosition(-1);
+            return;
+        }
+
+        tts.stop();
+        applyTtsLanguage();
+
+        String speechText = stripMarkdownForSpeech(rawText);
+        if (TextUtils.isEmpty(speechText)) return;
+
+        if (chatAdapter != null) {
+            chatAdapter.setCurrentlySpeakingPosition(position);
+        }
+
+        Bundle params = new Bundle();
+        params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "ai_reply_" + position);
+        tts.speak(speechText, TextToSpeech.QUEUE_FLUSH, params, "ai_reply_" + position);
+    }
+
+    private void handleCopyAiText(String text) {
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard != null) {
+            ClipData clip = ClipData.newPlainText("UkilBhai AI Response", text);
+            clipboard.setPrimaryClip(clip);
+            boolean isBn = LanguageHelper.isBengali(this);
+            Toast.makeText(this, isBn ? "অনুলিপি করা হয়েছে" : "Copied to clipboard", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private String stripMarkdownForSpeech(String markdown) {
+        if (markdown == null || markdown.isEmpty()) return "";
+        // Remove markdown tables
+        String clean = markdown.replaceAll("(?m)^\\|.*\\|$", " ");
+        clean = clean.replaceAll("\\|", " ");
+        // Remove code blocks
+        clean = clean.replaceAll("```[\\s\\S]*?```", " ");
+        clean = clean.replaceAll("`([^`]+)`", "$1");
+        // Remove markdown links [text](url) -> text
+        clean = clean.replaceAll("\\[([^\\]]+)\\]\\([^\\)]+\\)", "$1");
+        // Remove images ![alt](url)
+        clean = clean.replaceAll("!\\[[^\\]]*\\]\\([^\\)]+\\)", " ");
+        // Remove headers #, ##, etc.
+        clean = clean.replaceAll("(?m)^#{1,6}\\s+", "");
+        // Remove bold/italics
+        clean = clean.replaceAll("[*_~]{1,3}(.*?)[*_~]{1,3}", "$1");
+        // Remove bullet markers
+        clean = clean.replaceAll("(?m)^[\\*\\-\\+]\\s+", "");
+        // Remove numbered list prefixes
+        clean = clean.replaceAll("(?m)^\\d+\\.\\s+", "");
+        // Collapse multiple spaces/newlines
+        clean = clean.replaceAll("\\s+", " ").trim();
+        return clean;
     }
 
     private void startVoiceInput() {
@@ -452,6 +582,12 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void startNewChat() {
+        if (tts != null && tts.isSpeaking()) {
+            tts.stop();
+        }
+        if (chatAdapter != null) {
+            chatAdapter.setCurrentlySpeakingPosition(-1);
+        }
         messageList.clear();
         addInitialWelcomeMessage();
         chatAdapter.notifyDataSetChanged();
@@ -510,12 +646,28 @@ public class ChatActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         stopMicPulse();
+        if (tts != null && tts.isSpeaking()) {
+            tts.stop();
+            if (chatAdapter != null) {
+                chatAdapter.setCurrentlySpeakingPosition(-1);
+            }
+        }
         try {
             unregisterReceiver(networkReceiver);
         } catch (IllegalArgumentException ignored) {}
         try {
             unregisterReceiver(airplaneModeReceiver);
         } catch (IllegalArgumentException ignored) {}
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
+            tts = null;
+        }
     }
 
     private void updateConnectivityUI() {
@@ -585,6 +737,14 @@ public class ChatActivity extends AppCompatActivity {
                     ? "ইন্টারনেট সংযোগ নেই। অনুগ্রহ করে নেটওয়ার্ক চালু করুন।"
                     : "No internet connection. Please turn on network.", Toast.LENGTH_SHORT).show();
             return;
+        }
+
+        // Stop any active TTS when user sends a new message
+        if (tts != null && tts.isSpeaking()) {
+            tts.stop();
+            if (chatAdapter != null) {
+                chatAdapter.setCurrentlySpeakingPosition(-1);
+            }
         }
 
         // Attach legal context if selected

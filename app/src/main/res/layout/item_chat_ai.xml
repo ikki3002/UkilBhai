@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -16,4 +17,39 @@
         android:text="আপনার প্রশ্নের আইনি বিশ্লেষণ এখানে প্রদর্শিত হবে।"
         android:textColor="@color/text_primary"
         android:textSize="15sp" />
+
+    <!-- AI Response Action Bar (Copy & Read Aloud Speaker) -->
+    <LinearLayout
+        android:id="@+id/layoutAiActions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/btnCopyAi"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="অনুলিপি করুন"
+            android:padding="6dp"
+            android:src="@drawable/ic_copy"
+            app:tint="@color/text_secondary" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/btnReadAloud"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="শব্দ করে শুনুন"
+            android:padding="6dp"
+            android:src="@drawable/ic_speaker"
+            app:tint="@color/text_secondary" />
+    </LinearLayout>
 </LinearLayout>
