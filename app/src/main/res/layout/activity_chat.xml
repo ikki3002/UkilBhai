@@ -65,6 +65,7 @@
             </LinearLayout>
 
             <TextView
+                android:id="@+id/tvConnectionStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="1dp"
@@ -101,6 +102,38 @@
         android:background="@color/card_stroke"
         app:layout_constraintTop_toBottomOf="@id/layoutTopBar" />
 
+    <!-- Offline / Airplane Mode Warning Banner -->
+    <LinearLayout
+        android:id="@+id/layoutOfflineBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/emergency_red_bg"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="6dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/dividerTopBar">
+
+        <ImageView
+            android:id="@+id/ivOfflineBannerIcon"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:contentDescription="Status Icon"
+            android:src="@drawable/ic_traffic"
+            app:tint="@color/emergency_red_text" />
+
+        <TextView
+            android:id="@+id/tvOfflineBannerText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="ইন্টারনেট সংযোগ নেই। বার্তা পাঠানো যাবে না।"
+            android:textColor="@color/emergency_red_text"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
     <!-- Chat Messages RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvChatMessages"
@@ -110,7 +143,7 @@
         android:paddingTop="12dp"
         android:paddingBottom="12dp"
         app:layout_constraintBottom_toTopOf="@id/layoutBottomInput"
-        app:layout_constraintTop_toBottomOf="@id/dividerTopBar" />
+        app:layout_constraintTop_toBottomOf="@id/layoutOfflineBanner" />
 
     <!-- Loading / Typing Indicator -->
     <LinearLayout
