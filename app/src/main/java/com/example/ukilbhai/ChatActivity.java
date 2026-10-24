@@ -1,6 +1,10 @@
 package com.example.ukilbhai;
 
 import android.Manifest;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -11,6 +15,8 @@ import android.speech.RecognizerIntent;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.view.HapticFeedbackConstants;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -45,12 +51,19 @@ public class ChatActivity extends AppCompatActivity {
 
     private RecyclerView rvChatMessages;
     private EditText etUserPrompt;
+    private MaterialCardView cardGeminiDock;
     private ImageButton btnAddAttachment;
     private ImageButton btnVoiceInput;
+    private View viewMicPulse;
     private MaterialCardView cardActionButton;
     private ImageView ivActionIcon;
     private LinearLayout layoutTypingIndicator;
     private ImageButton btnBack;
+
+    private View layoutAttachmentBar;
+    private TextView tvAttachmentTitle;
+    private ImageButton btnRemoveAttachment;
+    private String currentAttachmentContext = null;
 
     private TextView tvConnectionStatus;
     private View layoutOfflineBanner;
@@ -67,6 +80,8 @@ public class ChatActivity extends AppCompatActivity {
     private final AiLegalClient aiLegalClient = new AiLegalClient();
 
     private ActivityResultLauncher<Intent> speechRecognizerLauncher;
+    private AnimatorSet micPulseAnimatorSet;
+    private boolean isShowingSendButton = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,12 +101,18 @@ public class ChatActivity extends AppCompatActivity {
     private void initViews() {
         rvChatMessages = findViewById(R.id.rvChatMessages);
         etUserPrompt = findViewById(R.id.etUserPrompt);
+        cardGeminiDock = findViewById(R.id.cardGeminiDock);
         btnAddAttachment = findViewById(R.id.btnAddAttachment);
         btnVoiceInput = findViewById(R.id.btnVoiceInput);
+        viewMicPulse = findViewById(R.id.viewMicPulse);
         cardActionButton = findViewById(R.id.cardActionButton);
         ivActionIcon = findViewById(R.id.ivActionIcon);
         layoutTypingIndicator = findViewById(R.id.layoutTypingIndicator);
         btnBack = findViewById(R.id.btnBack);
+
+        layoutAttachmentBar = findViewById(R.id.layoutAttachmentBar);
+        tvAttachmentTitle = findViewById(R.id.tvAttachmentTitle);
+        btnRemoveAttachment = findViewById(R.id.btnRemoveAttachment);
 
         tvConnectionStatus = findViewById(R.id.tvConnectionStatus);
         layoutOfflineBanner = findViewById(R.id.layoutOfflineBanner);
@@ -103,6 +124,7 @@ public class ChatActivity extends AppCompatActivity {
         speechRecognizerLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
+                    stopMicPulse();
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                         ArrayList<String> matches = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                         if (matches != null && !matches.isEmpty()) {
@@ -128,10 +150,16 @@ public class ChatActivity extends AppCompatActivity {
         rvChatMessages.setAdapter(chatAdapter);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void setupListeners() {
         btnBack.setOnClickListener(v -> finish());
 
-        // Dynamic transition between Gemini Live Waveform and Send action
+        // Micro-interaction: active:scale-95 with haptic feedback
+        applyPressScale(btnAddAttachment);
+        applyPressScale(btnVoiceInput);
+        applyPressScale(cardActionButton);
+
+        // Auto-expanding input: dynamic corner radius & seamless Send icon transition
         etUserPrompt.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -139,14 +167,21 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 boolean hasText = !TextUtils.isEmpty(s.toString().trim());
-                updateActionButtonState(hasText);
+                updateActionButtonState(hasText, true);
+
+                // Dynamically adjust corner radius between rounded-full (28dp) and rounded-2xl (20dp)
+                int lineCount = etUserPrompt.getLineCount();
+                float targetRadius = dpToPx(lineCount > 1 ? 20 : 28);
+                if (cardGeminiDock != null && cardGeminiDock.getRadius() != targetRadius) {
+                    cardGeminiDock.setRadius(targetRadius);
+                }
             }
 
             @Override
             public void afterTextChanged(Editable s) {}
         });
 
-        // Pill Action Button: Sends message if text exists, otherwise starts Voice Input
+        // Pill Action Button: Sends message if text exists, otherwise triggers Voice-to-Text
         cardActionButton.setOnClickListener(v -> {
             String prompt = etUserPrompt.getText().toString().trim();
             if (!TextUtils.isEmpty(prompt)) {
@@ -159,11 +194,46 @@ public class ChatActivity extends AppCompatActivity {
         // Dedicated Voice Input (Microphone button)
         btnVoiceInput.setOnClickListener(v -> startVoiceInput());
 
-        // Quick Legal Templates (+)
+        // Plus / Add legal quick templates
         btnAddAttachment.setOnClickListener(v -> showQuickLegalTopicsDialog());
+
+        // Remove active attachment
+        btnRemoveAttachment.setOnClickListener(v -> removeAttachment());
     }
 
-    private void updateActionButtonState(boolean hasText) {
+    @SuppressLint("ClickableViewAccessibility")
+    private void applyPressScale(View view) {
+        if (view == null) return;
+        view.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    v.animate().scaleX(0.92f).scaleY(0.92f).setDuration(70).start();
+                    v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start();
+                    break;
+            }
+            return false;
+        });
+    }
+
+    private void updateActionButtonState(boolean hasText, boolean animated) {
+        if (isShowingSendButton == hasText) return;
+        isShowingSendButton = hasText;
+
+        if (animated && ivActionIcon != null) {
+            ivActionIcon.animate().scaleX(0f).scaleY(0f).alpha(0f).setDuration(90).withEndAction(() -> {
+                applyButtonVisuals(hasText);
+                ivActionIcon.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(110).start();
+            }).start();
+        } else {
+            applyButtonVisuals(hasText);
+        }
+    }
+
+    private void applyButtonVisuals(boolean hasText) {
         if (hasText) {
             cardActionButton.setCardBackgroundColor(ContextCompat.getColor(this, R.color.primary_emerald));
             ivActionIcon.setImageResource(R.drawable.ic_send);
@@ -173,7 +243,7 @@ public class ChatActivity extends AppCompatActivity {
             cardActionButton.setCardBackgroundColor(ContextCompat.getColor(this, R.color.gemini_live_pill_bg));
             ivActionIcon.setImageResource(R.drawable.ic_waveform);
             ivActionIcon.setColorFilter(ContextCompat.getColor(this, R.color.gemini_live_bars));
-            cardActionButton.setContentDescription("ভয়েস ইনপুট");
+            cardActionButton.setContentDescription("ভয়েস মোড");
         }
     }
 
@@ -186,6 +256,8 @@ public class ChatActivity extends AppCompatActivity {
             return;
         }
 
+        startMicPulse();
+
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "bn-BD");
@@ -196,27 +268,76 @@ public class ChatActivity extends AppCompatActivity {
         try {
             speechRecognizerLauncher.launch(intent);
         } catch (ActivityNotFoundException e) {
+            stopMicPulse();
             Toast.makeText(this, "আপনার ডিভাইসে ভয়েস রিকগনিশন সুবিধা পাওয়া যায়নি।", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void startMicPulse() {
+        if (viewMicPulse == null) return;
+        viewMicPulse.setVisibility(View.VISIBLE);
+        btnVoiceInput.setColorFilter(ContextCompat.getColor(this, R.color.gemini_mic_pulse));
+
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(viewMicPulse, "scaleX", 1f, 1.35f);
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(viewMicPulse, "scaleY", 1f, 1.35f);
+        ObjectAnimator alpha = ObjectAnimator.ofFloat(viewMicPulse, "alpha", 0.7f, 0.1f);
+
+        scaleX.setRepeatCount(ValueAnimator.INFINITE);
+        scaleY.setRepeatCount(ValueAnimator.INFINITE);
+        alpha.setRepeatCount(ValueAnimator.INFINITE);
+        scaleX.setRepeatMode(ValueAnimator.REVERSE);
+        scaleY.setRepeatMode(ValueAnimator.REVERSE);
+        alpha.setRepeatMode(ValueAnimator.REVERSE);
+
+        micPulseAnimatorSet = new AnimatorSet();
+        micPulseAnimatorSet.playTogether(scaleX, scaleY, alpha);
+        micPulseAnimatorSet.setDuration(600);
+        micPulseAnimatorSet.start();
+    }
+
+    private void stopMicPulse() {
+        if (micPulseAnimatorSet != null) {
+            micPulseAnimatorSet.cancel();
+            micPulseAnimatorSet = null;
+        }
+        if (viewMicPulse != null) {
+            viewMicPulse.setVisibility(View.GONE);
+            viewMicPulse.setScaleX(1f);
+            viewMicPulse.setScaleY(1f);
+            viewMicPulse.setAlpha(1f);
+        }
+        if (btnVoiceInput != null) {
+            btnVoiceInput.setColorFilter(ContextCompat.getColor(this, R.color.gemini_icon_tint));
         }
     }
 
     private void showQuickLegalTopicsDialog() {
         String[] topics = new String[]{
-                "জিডি (সাধারণ ডায়েরি) করার নিয়ম ও নমুনা ড্রাফট",
+                "জিডি (সাধারণ ডায়েরি) করার নিয়ম ও ড্রাফট ফরম্যাট",
                 "দেনমোহর ও তালাক সংক্রান্ত আইনি অধিকার",
                 "বাড়িভাড়া আইন ও উচ্ছেদ নোটিশ বিধিমালা",
                 "মোটরযান আইন ও ট্রাফিক মামলার জরিমানা তালিকা",
-                "চেক ডিজঅনার (এনআই এক্ট ১৩৮ ধারা) সংক্রান্ত মামলা"
+                "চেক ডিজঅনার (এনআই এক্ট ১৩৮ ধারা) মামলা"
         };
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.Theme_UkilBhai);
-        builder.setTitle("দ্রুত আইনি বিষয় নির্বাচন করুন");
+        builder.setTitle("দ্রুত আইনি বিষয় ও সংযুক্তি নির্বাচন করুন");
         builder.setItems(topics, (dialog, which) -> {
-            etUserPrompt.setText(topics[which]);
-            etUserPrompt.setSelection(etUserPrompt.getText().length());
+            currentAttachmentContext = topics[which];
+            if (layoutAttachmentBar != null && tvAttachmentTitle != null) {
+                tvAttachmentTitle.setText(currentAttachmentContext);
+                layoutAttachmentBar.setVisibility(View.VISIBLE);
+            }
         });
         builder.setNegativeButton("বাতিল", null);
         builder.show();
+    }
+
+    private void removeAttachment() {
+        currentAttachmentContext = null;
+        if (layoutAttachmentBar != null) {
+            layoutAttachmentBar.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -258,6 +379,7 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        stopMicPulse();
         try {
             unregisterReceiver(networkReceiver);
         } catch (IllegalArgumentException ignored) {}
@@ -334,16 +456,23 @@ public class ChatActivity extends AppCompatActivity {
             return;
         }
 
+        // Attach legal context if selected
+        String finalPrompt = prompt;
+        if (!TextUtils.isEmpty(currentAttachmentContext)) {
+            finalPrompt = "[সংযুক্তি/আইনি বিষয়: " + currentAttachmentContext + "]\n" + prompt;
+        }
+
         // 1. Add user message
-        messageList.add(new ChatMessage(prompt, ChatMessage.SENDER_USER));
+        messageList.add(new ChatMessage(finalPrompt, ChatMessage.SENDER_USER));
         chatAdapter.notifyItemInserted(messageList.size() - 1);
         rvChatMessages.smoothScrollToPosition(messageList.size() - 1);
 
         etUserPrompt.setText("");
+        removeAttachment();
         setTyping(true);
 
-        // 2. Call unified AiLegalClient (Google Gemini 1.5 Flash -> Fallback to OpenRouter Meta/Qwen/Gemma)
-        aiLegalClient.sendMessage(messageList, prompt, new AiLegalClient.ResponseCallback() {
+        // 2. Call unified AiLegalClient
+        aiLegalClient.sendMessage(messageList, finalPrompt, new AiLegalClient.ResponseCallback() {
             @Override
             public void onSuccess(String reply, String providerUsed) {
                 setTyping(false);
@@ -371,5 +500,9 @@ public class ChatActivity extends AppCompatActivity {
         if (isTyping) {
             rvChatMessages.smoothScrollToPosition(messageList.size() - 1);
         }
+    }
+
+    private float dpToPx(int dp) {
+        return dp * getResources().getDisplayMetrics().density;
     }
 }

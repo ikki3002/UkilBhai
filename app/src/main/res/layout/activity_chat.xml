@@ -176,98 +176,174 @@
             android:textSize="12sp" />
     </LinearLayout>
 
-    <!-- Bottom Input Container (Gemini Style Capsule Dock) -->
+    <!-- Bottom Input Container (Gemini Floating Capsule Dock) -->
     <LinearLayout
         android:id="@+id/layoutBottomInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/bg_dark"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:paddingHorizontal="14dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="14dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="12dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <!-- Unified Gemini Capsule Dock -->
+        <!-- Attachment / Context Chip Preview -->
         <LinearLayout
-            android:id="@+id/layoutGeminiDock"
+            android:id="@+id/layoutAttachmentBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_gemini_dock"
+            android:layout_marginBottom="6dp"
             android:gravity="center_vertical"
-            android:minHeight="54dp"
             android:orientation="horizontal"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp">
+            android:visibility="gone">
 
-            <!-- Plus / Add Shortcut Button -->
-            <ImageButton
-                android:id="@+id/btnAddAttachment"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Add attachment or shortcut"
-                android:padding="8dp"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_add"
-                app:tint="@color/gemini_icon_tint" />
-
-            <!-- Text Input Area -->
-            <EditText
-                android:id="@+id/etUserPrompt"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="@null"
-                android:hint="উকিল ভাই-কে জিজ্ঞাসা করুন..."
-                android:importantForAutofill="no"
-                android:inputType="textMultiLine|textCapSentences"
-                android:maxLines="5"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="8dp"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary"
-                android:textSize="15sp" />
-
-            <!-- Voice Input Button (Mic) -->
-            <ImageButton
-                android:id="@+id/btnVoiceInput"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="ভয়েস ইনপুট"
-                android:padding="8dp"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_mic"
-                app:tint="@color/gemini_icon_tint" />
-
-            <!-- Action Pill Button (Gemini Live Waveform <-> Send) -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardActionButton"
-                android:layout_width="38dp"
-                android:layout_height="38dp"
-                android:layout_marginStart="4dp"
-                android:clickable="true"
-                android:focusable="true"
-                app:cardBackgroundColor="@color/gemini_live_pill_bg"
-                app:cardCornerRadius="19dp"
-                app:cardElevation="0dp"
-                app:strokeWidth="0dp">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_search_pill"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="10dp">
 
                 <ImageView
-                    android:id="@+id/ivActionIcon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="Action Button"
-                    android:src="@drawable/ic_waveform"
-                    app:tint="@color/gemini_live_bars" />
-            </com.google.android.material.card.MaterialCardView>
+                    android:id="@+id/ivAttachmentIcon"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:contentDescription="Attachment Type"
+                    android:src="@drawable/ic_penal"
+                    app:tint="@color/mint_accent" />
 
+                <TextView
+                    android:id="@+id/tvAttachmentTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="জিডি ড্রাফট ফরম্যাট"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
+
+                <ImageButton
+                    android:id="@+id/btnRemoveAttachment"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_marginStart="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Remove Attachment"
+                    android:padding="4dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_close"
+                    app:tint="@color/text_secondary" />
+            </LinearLayout>
         </LinearLayout>
+
+        <!-- Floating Gemini Capsule Dock -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardGeminiDock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@color/gemini_dock_bg"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/gemini_dock_stroke"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:id="@+id/layoutGeminiInner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="bottom"
+                android:minHeight="52dp"
+                android:orientation="horizontal"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="4dp">
+
+                <!-- Plus / Add Context Shortcut Button -->
+                <ImageButton
+                    android:id="@+id/btnAddAttachment"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Add context or legal shortcut"
+                    android:padding="9dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_add"
+                    app:tint="@color/gemini_icon_tint" />
+
+                <!-- Text Input Area (Auto-expanding, capped at 6 lines) -->
+                <EditText
+                    android:id="@+id/etUserPrompt"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:hint="আইনি সমস্যা বা প্রশ্ন লিখুন..."
+                    android:importantForAutofill="no"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:maxLines="6"
+                    android:minLines="1"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="8dp"
+                    android:scrollbars="vertical"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="15sp" />
+
+                <!-- Voice Input Button (Mic with pulsing listening circle) -->
+                <FrameLayout
+                    android:id="@+id/layoutMicWrapper"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center_vertical">
+
+                    <View
+                        android:id="@+id/viewMicPulse"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_mic_pulse"
+                        android:visibility="gone" />
+
+                    <ImageButton
+                        android:id="@+id/btnVoiceInput"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="ভয়েস ইনপুট"
+                        android:padding="9dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_mic"
+                        app:tint="@color/gemini_icon_tint" />
+                </FrameLayout>
+
+                <!-- Action Button: Gemini Live Waveform <-> Emerald Send -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardActionButton"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="4dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardBackgroundColor="@color/gemini_live_pill_bg"
+                    app:cardCornerRadius="19dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp">
+
+                    <ImageView
+                        android:id="@+id/ivActionIcon"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Action Button"
+                        android:src="@drawable/ic_waveform"
+                        app:tint="@color/gemini_live_bars" />
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
