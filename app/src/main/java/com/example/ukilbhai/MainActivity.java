@@ -1,5 +1,6 @@
 package com.example.ukilbhai;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -7,18 +8,36 @@ import android.view.View;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.ukilbhai.util.LanguageHelper;
+import com.example.ukilbhai.util.SettingsDialogHelper;
 import com.example.ukilbhai.util.ThemeHelper;
 
 public class MainActivity extends AppCompatActivity {
 
     @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LanguageHelper.applyLocale(newBase));
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applyTheme(this);
+        LanguageHelper.applyLanguageToApp(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        setupMainMenuMoreButton();
         setupEmergencyButtons();
         setupAiChatButton();
+    }
+
+    private void setupMainMenuMoreButton() {
+        View btnMainMenuMore = findViewById(R.id.btnMainMenuMore);
+        if (btnMainMenuMore != null) {
+            btnMainMenuMore.setOnClickListener(v -> {
+                SettingsDialogHelper.showSettingsDialog(this, this::recreate);
+            });
+        }
     }
 
     private void setupEmergencyButtons() {
@@ -36,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupAiChatButton() {
-        // Floating Button: "এআই পরামর্শ নিন (Chat)"
+        // Floating Button: "এআই পরামর্শ নিন"
         View fabAiChat = findViewById(R.id.fabAiChat);
         if (fabAiChat != null) {
             fabAiChat.setOnClickListener(v -> {

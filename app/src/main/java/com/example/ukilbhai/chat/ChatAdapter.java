@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.ukilbhai.R;
@@ -59,15 +60,19 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ChatMessage message = messageList.get(position);
+        int primaryTextColor = ContextCompat.getColor(holder.itemView.getContext(), R.color.text_primary);
+
         if (holder instanceof UserViewHolder) {
-            ((UserViewHolder) holder).tvMessage.setText(message.getText());
+            UserViewHolder userHolder = (UserViewHolder) holder;
+            userHolder.tvMessage.setTextColor(primaryTextColor);
+            userHolder.tvMessage.setText(message.getText());
         } else if (holder instanceof AiViewHolder) {
             AiViewHolder aiHolder = (AiViewHolder) holder;
             if (message.isError()) {
                 aiHolder.tvMessage.setTextColor(0xFFEF4444); // Error red
                 aiHolder.tvMessage.setText(message.getText());
             } else {
-                aiHolder.tvMessage.setTextColor(0xFFFFFFFF);
+                aiHolder.tvMessage.setTextColor(primaryTextColor);
                 // Render rich markdown (bold, lists, headings, and tables)
                 markwon.setMarkdown(aiHolder.tvMessage, message.getText());
             }

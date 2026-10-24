@@ -47,14 +47,15 @@ public class ThemeHelper {
     }
 
     public static String getThemeDisplayName(Context context, int mode) {
+        boolean isBn = LanguageHelper.isBengali(context);
         switch (mode) {
             case THEME_LIGHT:
-                return "লাইট মোড (Light)";
+                return isBn ? "লাইট" : "Light";
             case THEME_DARK:
-                return "ডার্ক মোড (Dark)";
+                return isBn ? "ডার্ক" : "Dark";
             case THEME_SYSTEM:
             default:
-                return "সিস্টেম ডিফল্ট (System Default)";
+                return isBn ? "সিস্টেম ডিফল্ট" : "System Default";
         }
     }
 }

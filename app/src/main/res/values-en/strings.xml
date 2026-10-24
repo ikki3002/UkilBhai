@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Ukil Bhai</string>
+    <string name="tagline">Your Digital Legal Assistant</string>
+    <string name="search_hint">Search legal queries or sections...</string>
+    <string name="emergency_999">Emergency 999</string>
+    <string name="emergency_16699">Legal Aid 16699</string>
+    <string name="cat_traffic">Traffic &amp; Road Transport</string>
+    <string name="cat_traffic_sub">Driver license, cases &amp; traffic fines</string>
+    <string name="cat_family">Family &amp; Women Rights</string>
+    <string name="cat_family_sub">Marriage, dower, guardianship &amp; protection</string>
+    <string name="cat_tenant">Tenancy &amp; Property Law</string>
+    <string name="cat_tenant_sub">Rental contracts, deeds &amp; land disputes</string>
+    <string name="cat_penal">Criminal Penal Code</string>
+    <string name="cat_penal_sub">GD, FIR, bail &amp; criminal procedures</string>
+    <string name="btn_ai_chat">Get AI Advice</string>
+    <string name="categories_title">Legal Services</string>
+</resources>

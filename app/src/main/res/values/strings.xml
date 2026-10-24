@@ -12,6 +12,6 @@
     <string name="cat_tenant_sub">ভাড়া চুক্তি, দলিল ও জমিজমা বিরোধ</string>
     <string name="cat_penal">সাধারণ ফৌজদারি ধারা</string>
     <string name="cat_penal_sub">জিডি, এফআইআর ও জামিন সংক্রান্ত তথ্য</string>
-    <string name="btn_ai_chat">এআই পরামর্শ নিন (Chat)</string>
+    <string name="btn_ai_chat">এআই পরামর্শ নিন</string>
     <string name="categories_title">আইনি সেবাসমূহ</string>
 </resources>

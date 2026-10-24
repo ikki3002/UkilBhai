@@ -49,6 +49,19 @@
                 android:textColor="@color/text_primary"
                 android:textSize="18sp"
                 android:textStyle="bold" />
+
+            <!-- 3-dot Overflow Menu for Settings -->
+            <ImageButton
+                android:id="@+id/btnChatMore"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Options"
+                android:padding="8dp"
+                android:src="@drawable/ic_more_vert"
+                app:tint="@color/text_primary" />
         </RelativeLayout>
 
         <!-- Offline / Airplane Mode Warning Banner -->
@@ -266,7 +279,7 @@
                             app:tint="@color/gemini_icon_tint" />
                     </FrameLayout>
 
-                    <!-- Action Button: Gemini Live Waveform <-> Emerald Send -->
+                    <!-- Action Button: Send button (Visible only when typing) -->
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/cardActionButton"
                         android:layout_width="38dp"
@@ -275,7 +288,8 @@
                         android:layout_marginStart="4dp"
                         android:clickable="true"
                         android:focusable="true"
-                        app:cardBackgroundColor="@color/gemini_live_pill_bg"
+                        android:visibility="gone"
+                        app:cardBackgroundColor="@color/primary_emerald"
                         app:cardCornerRadius="19dp"
                         app:cardElevation="0dp"
                         app:strokeWidth="0dp">
@@ -285,9 +299,9 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
-                            android:contentDescription="Action Button"
-                            android:src="@drawable/ic_waveform"
-                            app:tint="@color/gemini_live_bars" />
+                            android:contentDescription="পাঠান"
+                            android:src="@drawable/ic_send"
+                            app:tint="@color/white" />
                     </com.google.android.material.card.MaterialCardView>
 
                 </LinearLayout>
@@ -316,6 +330,7 @@
             android:paddingBottom="16dp">
 
             <TextView
+                android:id="@+id/tvDrawerTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="উকিল ভাই"
@@ -324,6 +339,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/tvDrawerSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
@@ -368,6 +384,7 @@
                         app:tint="@color/mint_accent" />
 
                     <TextView
+                        android:id="@+id/tvBtnNewChat"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
@@ -378,6 +395,7 @@
                 </LinearLayout>
 
                 <TextView
+                    android:id="@+id/tvRecentLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
@@ -437,11 +455,12 @@
                 app:tint="@color/text_primary" />
 
             <TextView
+                android:id="@+id/tvDrawerSettings"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="14dp"
                 android:layout_weight="1"
-                android:text="সেটিংস (Settings)"
+                android:text="সেটিংস"
                 android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />

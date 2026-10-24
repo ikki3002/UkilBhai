@@ -6,6 +6,7 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -28,7 +29,6 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -42,20 +42,30 @@ import com.example.ukilbhai.chat.ChatAdapter;
 import com.example.ukilbhai.chat.ChatMessage;
 import com.example.ukilbhai.receiver.AirplaneModeReceiver;
 import com.example.ukilbhai.receiver.NetworkConnectivityReceiver;
+import com.example.ukilbhai.util.LanguageHelper;
+import com.example.ukilbhai.util.SettingsDialogHelper;
 import com.example.ukilbhai.util.ThemeHelper;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ChatActivity extends AppCompatActivity {
 
-    private static final int REQUEST_RECORD_AUDIO_PERMISSION = 2001;
+    private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
 
     private DrawerLayout drawerLayout;
     private ImageButton btnMenu;
+    private ImageButton btnChatMore;
     private View btnDrawerSettings;
     private View btnNewChat;
+    private TextView tvChatTitle;
+    private TextView tvDrawerTitle;
+    private TextView tvDrawerSubtitle;
+    private TextView tvBtnNewChat;
+    private TextView tvRecentLabel;
+    private TextView tvDrawerSettings;
 
     private RecyclerView rvChatMessages;
     private EditText etUserPrompt;
@@ -65,7 +75,7 @@ public class ChatActivity extends AppCompatActivity {
     private View viewMicPulse;
     private MaterialCardView cardActionButton;
     private ImageView ivActionIcon;
-    private LinearLayout layoutTypingIndicator;
+    private View layoutTypingIndicator;
 
     private View layoutAttachmentBar;
     private TextView tvAttachmentTitle;
@@ -90,8 +100,14 @@ public class ChatActivity extends AppCompatActivity {
     private boolean isShowingSendButton = false;
 
     @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LanguageHelper.applyLocale(newBase));
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applyTheme(this);
+        LanguageHelper.applyLanguageToApp(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
@@ -100,6 +116,7 @@ public class ChatActivity extends AppCompatActivity {
         setupRecyclerView();
         setupListeners();
         setupReceivers();
+        updateLanguageUI();
 
         // Welcome greeting message
         addInitialWelcomeMessage();
@@ -108,8 +125,16 @@ public class ChatActivity extends AppCompatActivity {
     private void initViews() {
         drawerLayout = findViewById(R.id.drawerLayout);
         btnMenu = findViewById(R.id.btnMenu);
+        btnChatMore = findViewById(R.id.btnChatMore);
         btnDrawerSettings = findViewById(R.id.btnDrawerSettings);
         btnNewChat = findViewById(R.id.btnNewChat);
+
+        tvChatTitle = findViewById(R.id.tvChatTitle);
+        tvDrawerTitle = findViewById(R.id.tvDrawerTitle);
+        tvDrawerSubtitle = findViewById(R.id.tvDrawerSubtitle);
+        tvBtnNewChat = findViewById(R.id.tvBtnNewChat);
+        tvRecentLabel = findViewById(R.id.tvRecentLabel);
+        tvDrawerSettings = findViewById(R.id.tvDrawerSettings);
 
         rvChatMessages = findViewById(R.id.rvChatMessages);
         etUserPrompt = findViewById(R.id.etUserPrompt);
@@ -170,6 +195,12 @@ public class ChatActivity extends AppCompatActivity {
             });
         }
 
+        if (btnChatMore != null) {
+            btnChatMore.setOnClickListener(v -> {
+                SettingsDialogHelper.showSettingsDialog(this, this::recreate);
+            });
+        }
+
         if (btnNewChat != null) {
             btnNewChat.setOnClickListener(v -> {
                 if (drawerLayout != null) {
@@ -184,7 +215,7 @@ public class ChatActivity extends AppCompatActivity {
                 if (drawerLayout != null) {
                     drawerLayout.closeDrawer(GravityCompat.START);
                 }
-                showSettingsDialog();
+                SettingsDialogHelper.showSettingsDialog(this, this::recreate);
             });
         }
 
@@ -193,7 +224,7 @@ public class ChatActivity extends AppCompatActivity {
         applyPressScale(btnVoiceInput);
         applyPressScale(cardActionButton);
 
-        // Auto-expanding input: dynamic corner radius & seamless Send icon transition
+        // Auto-expanding input: dynamic corner radius & toggle Send button
         etUserPrompt.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -215,13 +246,11 @@ public class ChatActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         });
 
-        // Pill Action Button: Sends message if text exists, otherwise triggers Voice-to-Text
+        // Pill Action Button: Sends message (visible only when typing)
         cardActionButton.setOnClickListener(v -> {
             String prompt = etUserPrompt.getText().toString().trim();
             if (!TextUtils.isEmpty(prompt)) {
                 handleSendMessage();
-            } else {
-                startVoiceInput();
             }
         });
 
@@ -257,28 +286,66 @@ public class ChatActivity extends AppCompatActivity {
         if (isShowingSendButton == hasText) return;
         isShowingSendButton = hasText;
 
-        if (animated && ivActionIcon != null) {
-            ivActionIcon.animate().scaleX(0f).scaleY(0f).alpha(0f).setDuration(90).withEndAction(() -> {
-                applyButtonVisuals(hasText);
-                ivActionIcon.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(110).start();
-            }).start();
-        } else {
-            applyButtonVisuals(hasText);
-        }
-    }
-
-    private void applyButtonVisuals(boolean hasText) {
+        boolean isBn = LanguageHelper.isBengali(this);
         if (hasText) {
+            cardActionButton.setVisibility(View.VISIBLE);
             cardActionButton.setCardBackgroundColor(ContextCompat.getColor(this, R.color.primary_emerald));
             ivActionIcon.setImageResource(R.drawable.ic_send);
             ivActionIcon.setColorFilter(ContextCompat.getColor(this, R.color.white));
-            cardActionButton.setContentDescription("পাঠান");
+            cardActionButton.setContentDescription(isBn ? "পাঠান" : "Send");
+            if (animated) {
+                cardActionButton.setAlpha(0f);
+                cardActionButton.setScaleX(0.7f);
+                cardActionButton.setScaleY(0.7f);
+                cardActionButton.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(120).start();
+            } else {
+                cardActionButton.setAlpha(1f);
+                cardActionButton.setScaleX(1f);
+                cardActionButton.setScaleY(1f);
+            }
         } else {
-            cardActionButton.setCardBackgroundColor(ContextCompat.getColor(this, R.color.gemini_live_pill_bg));
-            ivActionIcon.setImageResource(R.drawable.ic_waveform);
-            ivActionIcon.setColorFilter(ContextCompat.getColor(this, R.color.gemini_live_bars));
-            cardActionButton.setContentDescription("ভয়েস মোড");
+            if (animated) {
+                cardActionButton.animate().alpha(0f).scaleX(0.7f).scaleY(0.7f).setDuration(100).withEndAction(() -> {
+                    cardActionButton.setVisibility(View.GONE);
+                }).start();
+            } else {
+                cardActionButton.setVisibility(View.GONE);
+            }
         }
+    }
+
+    private void updateLanguageUI() {
+        boolean isBn = LanguageHelper.isBengali(this);
+
+        if (tvChatTitle != null) {
+            tvChatTitle.setText(isBn ? "উকিল ভাই" : "Ukil Bhai");
+        }
+        if (etUserPrompt != null) {
+            etUserPrompt.setHint(isBn ? "আইনি সমস্যা বা প্রশ্ন লিখুন..." : "Ask legal questions or advice...");
+        }
+        if (tvDrawerTitle != null) {
+            tvDrawerTitle.setText(isBn ? "উকিল ভাই" : "Ukil Bhai");
+        }
+        if (tvDrawerSubtitle != null) {
+            tvDrawerSubtitle.setText(isBn ? "আপনার ডিজিটাল আইনি সহায়ক" : "Your Digital Legal Assistant");
+        }
+        if (tvBtnNewChat != null) {
+            tvBtnNewChat.setText(isBn ? "নতুন আইনি জিজ্ঞাসা" : "New Legal Inquiry");
+        }
+        if (tvRecentLabel != null) {
+            tvRecentLabel.setText(isBn ? "সাম্প্রতিক পরামর্শ" : "Recent Consultations");
+        }
+        if (tvDrawerSettings != null) {
+            tvDrawerSettings.setText(isBn ? "সেটিংস" : "Settings");
+        }
+        if (btnVoiceInput != null) {
+            btnVoiceInput.setContentDescription(isBn ? "ভয়েস ইনপুট" : "Voice Input");
+        }
+        if (cardActionButton != null) {
+            cardActionButton.setContentDescription(isBn ? "পাঠান" : "Send");
+        }
+
+        updateConnectivityUI();
     }
 
     private void startVoiceInput() {
@@ -292,18 +359,21 @@ public class ChatActivity extends AppCompatActivity {
 
         startMicPulse();
 
+        boolean isBn = LanguageHelper.isBengali(this);
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "bn-BD");
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "bn-BD");
-        intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, "bn-BD");
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "আপনার আইনি সমস্যাটি বলুন...");
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, isBn ? "bn-BD" : "en-US");
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, isBn ? "bn-BD" : "en-US");
+        intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, isBn ? "bn-BD" : "en-US");
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, isBn ? "আপনার আইনি সমস্যাটি বলুন..." : "Speak your legal query...");
 
         try {
             speechRecognizerLauncher.launch(intent);
         } catch (ActivityNotFoundException e) {
             stopMicPulse();
-            Toast.makeText(this, "আপনার ডিভাইসে ভয়েস রিকগনিশন সুবিধা পাওয়া যায়নি।", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, isBn
+                    ? "আপনার ডিভাইসে ভয়েস রিকগনিশন সুবিধা পাওয়া যায়নি।"
+                    : "Voice recognition service not available on device.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -346,25 +416,32 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void showQuickLegalTopicsDialog() {
-        String[] topics = new String[]{
+        boolean isBn = LanguageHelper.isBengali(this);
+        String[] topics = isBn ? new String[]{
                 "জিডি (সাধারণ ডায়েরি) করার নিয়ম ও ড্রাফট ফরম্যাট",
                 "দেনমোহর ও তালাক সংক্রান্ত আইনি অধিকার",
                 "বাড়িভাড়া আইন ও উচ্ছেদ নোটিশ বিধিমালা",
                 "মোটরযান আইন ও ট্রাফিক মামলার জরিমানা তালিকা",
                 "চেক ডিজঅনার (এনআই এক্ট ১৩৮ ধারা) মামলা"
+        } : new String[]{
+                "General Diary (GD) draft format & guidelines",
+                "Dower & divorce legal rights and family law",
+                "Tenancy Act & eviction notice procedures",
+                "Motor Vehicles Act & traffic fine schedule",
+                "Dishonour of Cheque (NI Act Section 138) cases"
         };
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.Theme_UkilBhai);
-        builder.setTitle("দ্রুত আইনি বিষয় ও সংযুক্তি নির্বাচন করুন");
-        builder.setItems(topics, (dialog, which) -> {
-            currentAttachmentContext = topics[which];
-            if (layoutAttachmentBar != null && tvAttachmentTitle != null) {
-                tvAttachmentTitle.setText(currentAttachmentContext);
-                layoutAttachmentBar.setVisibility(View.VISIBLE);
-            }
-        });
-        builder.setNegativeButton("বাতিল", null);
-        builder.show();
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(isBn ? "দ্রুত আইনি বিষয় ও সংযুক্তি নির্বাচন করুন" : "Select Quick Legal Topic / Attachment")
+                .setItems(topics, (dialog, which) -> {
+                    currentAttachmentContext = topics[which];
+                    if (layoutAttachmentBar != null && tvAttachmentTitle != null) {
+                        tvAttachmentTitle.setText(currentAttachmentContext);
+                        layoutAttachmentBar.setVisibility(View.VISIBLE);
+                    }
+                })
+                .setNegativeButton(isBn ? "বাতিল" : "Cancel", null)
+                .show();
     }
 
     private void removeAttachment() {
@@ -378,56 +455,8 @@ public class ChatActivity extends AppCompatActivity {
         messageList.clear();
         addInitialWelcomeMessage();
         chatAdapter.notifyDataSetChanged();
-        Toast.makeText(this, "নতুন আইনি জিজ্ঞাসা শুরু হয়েছে", Toast.LENGTH_SHORT).show();
-    }
-
-    private void showSettingsDialog() {
-        int currentTheme = ThemeHelper.getSavedTheme(this);
-        String currentThemeName = ThemeHelper.getThemeDisplayName(this, currentTheme);
-
-        String[] settingsItems = new String[]{"থিম (Theme): " + currentThemeName};
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.Theme_UkilBhai);
-        builder.setTitle("সেটিংস (Settings)");
-        builder.setItems(settingsItems, (dialog, which) -> {
-            if (which == 0) {
-                showThemeSelectionModal();
-            }
-        });
-        builder.setNegativeButton("বন্ধ করুন (Close)", null);
-        builder.show();
-    }
-
-    private void showThemeSelectionModal() {
-        String[] themeOptions = new String[]{"Light (লাইট)", "Dark (ডার্ক)", "System Default (সিস্টেম ডিফল্ট)"};
-        int currentTheme = ThemeHelper.getSavedTheme(this);
-        int checkedIndex = 1; // Default dark
-        if (currentTheme == ThemeHelper.THEME_LIGHT) {
-            checkedIndex = 0;
-        } else if (currentTheme == ThemeHelper.THEME_DARK) {
-            checkedIndex = 1;
-        } else if (currentTheme == ThemeHelper.THEME_SYSTEM) {
-            checkedIndex = 2;
-        }
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.Theme_UkilBhai);
-        builder.setTitle("Choose Theme (থিম নির্বাচন করুন)");
-        builder.setSingleChoiceItems(themeOptions, checkedIndex, (dialog, which) -> {
-            int newThemeMode = ThemeHelper.THEME_SYSTEM;
-            if (which == 0) {
-                newThemeMode = ThemeHelper.THEME_LIGHT;
-            } else if (which == 1) {
-                newThemeMode = ThemeHelper.THEME_DARK;
-            } else if (which == 2) {
-                newThemeMode = ThemeHelper.THEME_SYSTEM;
-            }
-
-            ThemeHelper.saveTheme(ChatActivity.this, newThemeMode);
-            dialog.dismiss();
-            Toast.makeText(ChatActivity.this, "থিম পরিবর্তিত হয়েছে", Toast.LENGTH_SHORT).show();
-        });
-        builder.setNegativeButton("বাতিল (Cancel)", null);
-        builder.show();
+        boolean isBn = LanguageHelper.isBengali(this);
+        Toast.makeText(this, isBn ? "নতুন আইনি জিজ্ঞাসা শুরু হয়েছে" : "Started new legal inquiry", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -446,7 +475,10 @@ public class ChatActivity extends AppCompatActivity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startVoiceInput();
             } else {
-                Toast.makeText(this, "ভয়েস ইনপুটের জন্য অডিও রেকর্ডিং পারমিশন প্রয়োজন।", Toast.LENGTH_SHORT).show();
+                boolean isBn = LanguageHelper.isBengali(this);
+                Toast.makeText(this, isBn 
+                        ? "ভয়েস ইনপুটের জন্য অডিও রেকর্ডিং পারমিশন প্রয়োজন।" 
+                        : "Audio recording permission required for voice input.", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -466,7 +498,6 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Check initial connectivity and airplane mode status
         isNetworkConnected = NetworkConnectivityReceiver.isNetworkAvailable(this);
         isAirplaneModeOn = AirplaneModeReceiver.isAirplaneModeOn(this);
         updateConnectivityUI();
@@ -489,13 +520,16 @@ public class ChatActivity extends AppCompatActivity {
 
     private void updateConnectivityUI() {
         runOnUiThread(() -> {
+            boolean isBn = LanguageHelper.isBengali(this);
             if (isAirplaneModeOn) {
                 if (layoutOfflineBanner != null) {
                     layoutOfflineBanner.setVisibility(View.VISIBLE);
                     layoutOfflineBanner.setBackgroundColor(ContextCompat.getColor(this, R.color.warning_amber_bg));
                 }
                 if (tvOfflineBannerText != null) {
-                    tvOfflineBannerText.setText("বিমান মোড সক্রিয় রয়েছে। ইন্টারনেট সংযোগ বন্ধ।");
+                    tvOfflineBannerText.setText(isBn
+                            ? "বিমান মোড সক্রিয় রয়েছে। ইন্টারনেট সংযোগ বন্ধ।"
+                            : "Airplane mode is active. Internet connection off.");
                     tvOfflineBannerText.setTextColor(ContextCompat.getColor(this, R.color.warning_amber));
                 }
                 if (ivOfflineBannerIcon != null) {
@@ -507,7 +541,9 @@ public class ChatActivity extends AppCompatActivity {
                     layoutOfflineBanner.setBackgroundColor(ContextCompat.getColor(this, R.color.emergency_red_bg));
                 }
                 if (tvOfflineBannerText != null) {
-                    tvOfflineBannerText.setText("ইন্টারনেট সংযোগ পাওয়া যাচ্ছে না। অনুগ্রহ করে নেটওয়ার্ক চেক করুন।");
+                    tvOfflineBannerText.setText(isBn
+                            ? "ইন্টারনেট সংযোগ পাওয়া যাচ্ছে না। অনুগ্রহ করে নেটওয়ার্ক চেক করুন।"
+                            : "No internet connection found. Please check network.");
                     tvOfflineBannerText.setTextColor(ContextCompat.getColor(this, R.color.emergency_red_text));
                 }
                 if (ivOfflineBannerIcon != null) {
@@ -522,7 +558,10 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void addInitialWelcomeMessage() {
-        String welcome = "আসসালামু আলাইকুম! আমি 'উকিল ভাই' এআই। আপনার কি ধরনের আইনি পরামর্শ বা তথ্য প্রয়োজন? দয়া করে আপনার সমস্যাটি লিখুন।";
+        boolean isBn = LanguageHelper.isBengali(this);
+        String welcome = isBn
+                ? "আসসালামু আলাইকুম! আমি 'উকিল ভাই' এআই। আপনার কি ধরনের আইনি পরামর্শ বা তথ্য প্রয়োজন? দয়া করে আপনার সমস্যাটি লিখুন।"
+                : "Hello! I am Ukil Bhai AI. What kind of legal advice or information do you need? Please describe your query.";
         messageList.add(new ChatMessage(welcome, ChatMessage.SENDER_AI));
         chatAdapter.notifyItemInserted(messageList.size() - 1);
     }
@@ -533,20 +572,27 @@ public class ChatActivity extends AppCompatActivity {
             return;
         }
 
+        boolean isBn = LanguageHelper.isBengali(this);
         if (isAirplaneModeOn) {
-            Toast.makeText(this, "বিমান মোড চালু থাকায় বার্তা পাঠানো সম্ভব নয়।", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, isBn
+                    ? "বিমান মোড চালু থাকায় বার্তা পাঠানো সম্ভব নয়।"
+                    : "Cannot send message while Airplane mode is on.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (!isNetworkConnected) {
-            Toast.makeText(this, "ইন্টারনেট সংযোগ নেই। অনুগ্রহ করে নেটওয়ার্ক চালু করুন।", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, isBn
+                    ? "ইন্টারনেট সংযোগ নেই। অনুগ্রহ করে নেটওয়ার্ক চালু করুন।"
+                    : "No internet connection. Please turn on network.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         // Attach legal context if selected
         String finalPrompt = prompt;
         if (!TextUtils.isEmpty(currentAttachmentContext)) {
-            finalPrompt = "[সংযুক্তি/আইনি বিষয়: " + currentAttachmentContext + "]\n" + prompt;
+            finalPrompt = isBn
+                    ? "[সংযুক্তি/আইনি বিষয়: " + currentAttachmentContext + "]\n" + prompt
+                    : "[Attachment/Legal Topic: " + currentAttachmentContext + "]\n" + prompt;
         }
 
         // 1. Add user message
@@ -571,7 +617,8 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onError(String errorMessage) {
                 setTyping(false);
-                messageList.add(new ChatMessage("ত্রুটি: " + errorMessage, ChatMessage.SENDER_AI, true));
+                String errPrefix = isBn ? "ত্রুটি: " : "Error: ";
+                messageList.add(new ChatMessage(errPrefix + errorMessage, ChatMessage.SENDER_AI, true));
                 chatAdapter.notifyItemInserted(messageList.size() - 1);
                 rvChatMessages.smoothScrollToPosition(messageList.size() - 1);
                 Toast.makeText(ChatActivity.this, errorMessage, Toast.LENGTH_LONG).show();
