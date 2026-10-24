@@ -65,7 +65,6 @@ public class ChatActivity extends AppCompatActivity {
     private ImageButton btnRemoveAttachment;
     private String currentAttachmentContext = null;
 
-    private TextView tvConnectionStatus;
     private View layoutOfflineBanner;
     private TextView tvOfflineBannerText;
     private ImageView ivOfflineBannerIcon;
@@ -114,7 +113,6 @@ public class ChatActivity extends AppCompatActivity {
         tvAttachmentTitle = findViewById(R.id.tvAttachmentTitle);
         btnRemoveAttachment = findViewById(R.id.btnRemoveAttachment);
 
-        tvConnectionStatus = findViewById(R.id.tvConnectionStatus);
         layoutOfflineBanner = findViewById(R.id.layoutOfflineBanner);
         tvOfflineBannerText = findViewById(R.id.tvOfflineBannerText);
         ivOfflineBannerIcon = findViewById(R.id.ivOfflineBannerIcon);
@@ -391,10 +389,6 @@ public class ChatActivity extends AppCompatActivity {
     private void updateConnectivityUI() {
         runOnUiThread(() -> {
             if (isAirplaneModeOn) {
-                if (tvConnectionStatus != null) {
-                    tvConnectionStatus.setText("বিমান মোড চালু • অফলাইন");
-                    tvConnectionStatus.setTextColor(ContextCompat.getColor(this, R.color.warning_amber));
-                }
                 if (layoutOfflineBanner != null) {
                     layoutOfflineBanner.setVisibility(View.VISIBLE);
                     layoutOfflineBanner.setBackgroundColor(ContextCompat.getColor(this, R.color.warning_amber_bg));
@@ -407,10 +401,6 @@ public class ChatActivity extends AppCompatActivity {
                     ivOfflineBannerIcon.setColorFilter(ContextCompat.getColor(this, R.color.warning_amber));
                 }
             } else if (!isNetworkConnected) {
-                if (tvConnectionStatus != null) {
-                    tvConnectionStatus.setText("অফলাইন • ইন্টারনেট সংযোগ বিচ্ছিন্ন");
-                    tvConnectionStatus.setTextColor(ContextCompat.getColor(this, R.color.emergency_red_text));
-                }
                 if (layoutOfflineBanner != null) {
                     layoutOfflineBanner.setVisibility(View.VISIBLE);
                     layoutOfflineBanner.setBackgroundColor(ContextCompat.getColor(this, R.color.emergency_red_bg));
@@ -423,10 +413,6 @@ public class ChatActivity extends AppCompatActivity {
                     ivOfflineBannerIcon.setColorFilter(ContextCompat.getColor(this, R.color.emergency_red_text));
                 }
             } else {
-                if (tvConnectionStatus != null) {
-                    tvConnectionStatus.setText("অনলাইন • তাৎক্ষণিক পরামর্শ");
-                    tvConnectionStatus.setTextColor(ContextCompat.getColor(this, R.color.mint_accent));
-                }
                 if (layoutOfflineBanner != null) {
                     layoutOfflineBanner.setVisibility(View.GONE);
                 }
