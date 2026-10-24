@@ -1,289 +1,451 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout 
+<androidx.drawerlayout.widget.DrawerLayout 
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_dark"
     tools:context=".ChatActivity">
 
-    <!-- Top App Bar Header -->
-    <RelativeLayout
-        android:id="@+id/layoutTopBar"
+    <!-- Primary Chat Screen Content -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutMainChatContainer"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="@color/bg_dark"
-        android:paddingHorizontal="8dp"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_height="match_parent"
+        android:background="@color/bg_dark">
 
-        <!-- Back Button -->
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Back"
-            android:padding="8dp"
-            android:src="@drawable/ic_back" />
+        <!-- Top App Bar Header (Minimalist Gemini Style) -->
+        <RelativeLayout
+            android:id="@+id/layoutTopBar"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@color/bg_dark"
+            android:paddingHorizontal="8dp"
+            app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Title Text: উকিল ভাই -->
-        <TextView
-            android:id="@+id/tvChatTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="8dp"
-            android:layout_toEndOf="@id/btnBack"
-            android:text="উকিল ভাই"
-            android:textColor="@color/text_primary"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-    </RelativeLayout>
+            <!-- 3-bar Hamburger Menu Button -->
+            <ImageButton
+                android:id="@+id/btnMenu"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Menu"
+                android:padding="8dp"
+                android:src="@drawable/ic_menu"
+                app:tint="@color/text_primary" />
 
-    <!-- Offline / Airplane Mode Warning Banner -->
-    <LinearLayout
-        android:id="@+id/layoutOfflineBanner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/emergency_red_bg"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="6dp"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/layoutTopBar">
+            <!-- Title Text: উকিল ভাই -->
+            <TextView
+                android:id="@+id/tvChatTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="8dp"
+                android:layout_toEndOf="@id/btnMenu"
+                android:text="উকিল ভাই"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </RelativeLayout>
 
-        <ImageView
-            android:id="@+id/ivOfflineBannerIcon"
-            android:layout_width="14dp"
-            android:layout_height="14dp"
-            android:contentDescription="Status Icon"
-            android:src="@drawable/ic_traffic"
-            app:tint="@color/emergency_red_text" />
-
-        <TextView
-            android:id="@+id/tvOfflineBannerText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="ইন্টারনেট সংযোগ নেই। বার্তা পাঠানো যাবে না।"
-            android:textColor="@color/emergency_red_text"
-            android:textSize="11sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- Chat Messages RecyclerView -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvChatMessages"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
-        app:layout_constraintBottom_toTopOf="@id/layoutBottomInput"
-        app:layout_constraintTop_toBottomOf="@id/layoutOfflineBanner" />
-
-    <!-- Loading / Typing Indicator -->
-    <LinearLayout
-        android:id="@+id/layoutTypingIndicator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_chat_bubble_ai"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="14dp"
-        android:paddingVertical="8dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/layoutBottomInput"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <ProgressBar
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:indeterminate="true"
-            android:indeterminateTint="@color/mint_accent" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="উকিল ভাই উত্তর প্রস্তুত করছেন..."
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp" />
-    </LinearLayout>
-
-    <!-- Bottom Input Container (Gemini Floating Capsule Dock) -->
-    <LinearLayout
-        android:id="@+id/layoutBottomInput"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/bg_dark"
-        android:orientation="vertical"
-        android:paddingHorizontal="14dp"
-        android:paddingTop="4dp"
-        android:paddingBottom="12dp"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <!-- Attachment / Context Chip Preview -->
+        <!-- Offline / Airplane Mode Warning Banner -->
         <LinearLayout
-            android:id="@+id/layoutAttachmentBar"
+            android:id="@+id/layoutOfflineBanner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="6dp"
-            android:gravity="center_vertical"
+            android:background="@color/emergency_red_bg"
+            android:gravity="center"
             android:orientation="horizontal"
-            android:visibility="gone">
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="6dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/layoutTopBar">
 
-            <LinearLayout
+            <ImageView
+                android:id="@+id/ivOfflineBannerIcon"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:contentDescription="Status Icon"
+                android:src="@drawable/ic_traffic"
+                app:tint="@color/emergency_red_text" />
+
+            <TextView
+                android:id="@+id/tvOfflineBannerText"
                 android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:background="@drawable/bg_search_pill"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="10dp">
-
-                <ImageView
-                    android:id="@+id/ivAttachmentIcon"
-                    android:layout_width="14dp"
-                    android:layout_height="14dp"
-                    android:contentDescription="Attachment Type"
-                    android:src="@drawable/ic_penal"
-                    app:tint="@color/mint_accent" />
-
-                <TextView
-                    android:id="@+id/tvAttachmentTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="জিডি ড্রাফট ফরম্যাট"
-                    android:textColor="@color/text_primary"
-                    android:textSize="12sp" />
-
-                <ImageButton
-                    android:id="@+id/btnRemoveAttachment"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_marginStart="8dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Remove Attachment"
-                    android:padding="4dp"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/ic_close"
-                    app:tint="@color/text_secondary" />
-            </LinearLayout>
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="ইন্টারনেট সংযোগ নেই। বার্তা পাঠানো যাবে না।"
+                android:textColor="@color/emergency_red_text"
+                android:textSize="11sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Floating Gemini Capsule Dock (Borderless) -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardGeminiDock"
+        <!-- Chat Messages RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvChatMessages"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:clipToPadding="false"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            app:layout_constraintBottom_toTopOf="@id/layoutBottomInput"
+            app:layout_constraintTop_toBottomOf="@id/layoutOfflineBanner" />
+
+        <!-- Loading / Typing Indicator -->
+        <LinearLayout
+            android:id="@+id/layoutTypingIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/bg_chat_bubble_ai"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="8dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/layoutBottomInput"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ProgressBar
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:indeterminate="true"
+                android:indeterminateTint="@color/mint_accent" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="উকিল ভাই উত্তর প্রস্তুত করছেন..."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Bottom Input Container (Gemini Floating Capsule Dock) -->
+        <LinearLayout
+            android:id="@+id/layoutBottomInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardBackgroundColor="@color/gemini_dock_bg"
-            app:cardCornerRadius="28dp"
-            app:cardElevation="2dp"
-            app:strokeWidth="0dp">
+            android:background="@color/bg_dark"
+            android:orientation="vertical"
+            android:paddingHorizontal="14dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="12dp"
+            app:layout_constraintBottom_toBottomOf="parent">
 
+            <!-- Attachment / Context Chip Preview -->
             <LinearLayout
-                android:id="@+id/layoutGeminiInner"
+                android:id="@+id/layoutAttachmentBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="bottom"
-                android:minHeight="52dp"
+                android:layout_marginBottom="6dp"
+                android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="6dp"
-                android:paddingVertical="4dp">
+                android:visibility="gone">
 
-                <!-- Plus / Add Context Shortcut Button -->
-                <ImageButton
-                    android:id="@+id/btnAddAttachment"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_gravity="center_vertical"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Add context or legal shortcut"
-                    android:padding="9dp"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/ic_add"
-                    app:tint="@color/gemini_icon_tint" />
-
-                <!-- Text Input Area (Auto-expanding, capped at 6 lines) -->
-                <EditText
-                    android:id="@+id/etUserPrompt"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:background="@null"
-                    android:hint="আইনি সমস্যা বা প্রশ্ন লিখুন..."
-                    android:importantForAutofill="no"
-                    android:inputType="textMultiLine|textCapSentences"
-                    android:maxLines="6"
-                    android:minLines="1"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="8dp"
-                    android:scrollbars="vertical"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_secondary"
-                    android:textSize="15sp" />
-
-                <!-- Voice Input Button (Mic with pulsing listening circle) -->
-                <FrameLayout
-                    android:id="@+id/layoutMicWrapper"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_gravity="center_vertical">
-
-                    <View
-                        android:id="@+id/viewMicPulse"
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        android:layout_gravity="center"
-                        android:background="@drawable/bg_mic_pulse"
-                        android:visibility="gone" />
-
-                    <ImageButton
-                        android:id="@+id/btnVoiceInput"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_gravity="center"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="ভয়েস ইনপুট"
-                        android:padding="9dp"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_mic"
-                        app:tint="@color/gemini_icon_tint" />
-                </FrameLayout>
-
-                <!-- Action Button: Gemini Live Waveform <-> Emerald Send -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/cardActionButton"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginStart="4dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardBackgroundColor="@color/gemini_live_pill_bg"
-                    app:cardCornerRadius="19dp"
-                    app:cardElevation="0dp"
-                    app:strokeWidth="0dp">
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_search_pill"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="10dp">
 
                     <ImageView
-                        android:id="@+id/ivActionIcon"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="Action Button"
-                        android:src="@drawable/ic_waveform"
-                        app:tint="@color/gemini_live_bars" />
-                </com.google.android.material.card.MaterialCardView>
+                        android:id="@+id/ivAttachmentIcon"
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:contentDescription="Attachment Type"
+                        android:src="@drawable/ic_penal"
+                        app:tint="@color/mint_accent" />
 
+                    <TextView
+                        android:id="@+id/tvAttachmentTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="জিডি ড্রাফট ফরম্যাট"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp" />
+
+                    <ImageButton
+                        android:id="@+id/btnRemoveAttachment"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_marginStart="8dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Remove Attachment"
+                        android:padding="4dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_close"
+                        app:tint="@color/text_secondary" />
+                </LinearLayout>
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+
+            <!-- Floating Gemini Capsule Dock (Borderless) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardGeminiDock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/gemini_dock_bg"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:id="@+id/layoutGeminiInner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="bottom"
+                    android:minHeight="52dp"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="4dp">
+
+                    <!-- Plus / Add Context Shortcut Button -->
+                    <ImageButton
+                        android:id="@+id/btnAddAttachment"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Add context or legal shortcut"
+                        android:padding="9dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_add"
+                        app:tint="@color/gemini_icon_tint" />
+
+                    <!-- Text Input Area (Auto-expanding, capped at 6 lines) -->
+                    <EditText
+                        android:id="@+id/etUserPrompt"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="1"
+                        android:background="@null"
+                        android:hint="আইনি সমস্যা বা প্রশ্ন লিখুন..."
+                        android:importantForAutofill="no"
+                        android:inputType="textMultiLine|textCapSentences"
+                        android:maxLines="6"
+                        android:minLines="1"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="8dp"
+                        android:scrollbars="vertical"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_secondary"
+                        android:textSize="15sp" />
+
+                    <!-- Voice Input Button (Mic with pulsing listening circle) -->
+                    <FrameLayout
+                        android:id="@+id/layoutMicWrapper"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center_vertical">
+
+                        <View
+                            android:id="@+id/viewMicPulse"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/bg_mic_pulse"
+                            android:visibility="gone" />
+
+                        <ImageButton
+                            android:id="@+id/btnVoiceInput"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_gravity="center"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="ভয়েস ইনপুট"
+                            android:padding="9dp"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_mic"
+                            app:tint="@color/gemini_icon_tint" />
+                    </FrameLayout>
+
+                    <!-- Action Button: Gemini Live Waveform <-> Emerald Send -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardActionButton"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="4dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="@color/gemini_live_pill_bg"
+                        app:cardCornerRadius="19dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="0dp">
+
+                        <ImageView
+                            android:id="@+id/ivActionIcon"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="Action Button"
+                            android:src="@drawable/ic_waveform"
+                            app:tint="@color/gemini_live_bars" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Left Sidebar (Drawer) Container -->
+    <LinearLayout
+        android:id="@+id/layoutSidebarDrawer"
+        android:layout_width="280dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@color/surface_card"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="vertical">
+
+        <!-- Drawer Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="36dp"
+            android:paddingBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="উকিল ভাই"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="আপনার ডিজিটাল আইনি সহায়ক"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/card_stroke" />
+
+        <!-- Drawer Content Area -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- New Chat Button -->
+                <LinearLayout
+                    android:id="@+id/btnNewChat"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_search_pill"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="14dp">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:contentDescription="New Chat Icon"
+                        android:src="@drawable/ic_add"
+                        app:tint="@color/mint_accent" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:text="নতুন আইনি জিজ্ঞাসা"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="সাম্প্রতিক পরামর্শ"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="• সাধারণ ডায়েরি (জিডি) নিয়মাবলী"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp"
+                    android:paddingVertical="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="• দেনমোহর ও পারিবারিক সুরক্ষা"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp"
+                    android:paddingVertical="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="• সড়ক পরিবহন আইন ও জরিমানা"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp"
+                    android:paddingVertical="8dp" />
+            </LinearLayout>
+        </ScrollView>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/card_stroke" />
+
+        <!-- Pinned Settings Button at very bottom of sidebar -->
+        <LinearLayout
+            android:id="@+id/btnDrawerSettings"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="20dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:contentDescription="Settings Icon"
+                android:src="@drawable/ic_settings"
+                app:tint="@color/text_primary" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:text="সেটিংস (Settings)"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.drawerlayout.widget.DrawerLayout>

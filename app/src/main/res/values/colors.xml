@@ -1,45 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Linear Dark Palette -->
-    <color name="bg_dark">#040605</color>
-    <color name="surface_card">#0D1210</color>
-    <color name="card_stroke">#272C2A</color>
-    <color name="card_stroke_glow">#334D3F</color>
+    <!-- Light Mode (Default Day) Palette -->
+    <color name="bg_dark">#FFFFFF</color>
+    <color name="surface_card">#F8F9FA</color>
+    <color name="card_stroke">#E5E7EB</color>
+    <color name="card_stroke_glow">#D1D5DB</color>
 
     <!-- Emerald / Mint Accent Brand Colors -->
     <color name="primary_emerald">#169A50</color>
-    <color name="mint_accent">#55D396</color>
-    <color name="mint_accent_alpha">#1A55D396</color>
+    <color name="mint_accent">#169A50</color>
+    <color name="mint_accent_alpha">#1A169A50</color>
     <color name="glow_emerald">#169A50</color>
 
     <!-- Emergency Badges / Accents -->
-    <color name="emergency_red_bg">#1F1113</color>
+    <color name="emergency_red_bg">#FEE2E2</color>
     <color name="emergency_red_stroke">#EF4444</color>
-    <color name="emergency_red_text">#F87171</color>
+    <color name="emergency_red_text">#DC2626</color>
     
-    <color name="warning_amber">#FBBF24</color>
-    <color name="warning_amber_bg">#261E0A</color>
+    <color name="warning_amber">#D97706</color>
+    <color name="warning_amber_bg">#FEF3C7</color>
 
-    <!-- Gemini Capsule Input Palette -->
-    <color name="gemini_dock_bg">#1E1F20</color>
-    <color name="gemini_dock_stroke">#37393B</color>
+    <!-- Gemini Capsule Input Palette (Light Mode) -->
+    <color name="gemini_dock_bg">#F0F4F9</color>
+    <color name="gemini_dock_stroke">#E1E3E1</color>
     <color name="gemini_dock_bg_light">#F0F4F9</color>
     <color name="gemini_dock_stroke_light">#E1E3E1</color>
-    <color name="gemini_live_pill_bg">#253556</color>
-    <color name="gemini_live_bars">#A8C7FA</color>
-    <color name="gemini_icon_tint">#C4C7C5</color>
+    <color name="gemini_live_pill_bg">#D3E3FD</color>
+    <color name="gemini_live_bars">#0B57D0</color>
+    <color name="gemini_icon_tint">#444746</color>
     <color name="gemini_mic_pulse">#FF5E7E</color>
 
-    <!-- User Chat Bubble (Gemini Light-Dark Theme, No Border) -->
-    <color name="chat_bubble_user_bg">#282A2C</color>
+    <!-- User Chat Bubble (Gemini Light Mode, Clean Gray Pill) -->
+    <color name="chat_bubble_user_bg">#E9EEF6</color>
 
-    <color name="legal_aid_bg">#091A12</color>
+    <color name="legal_aid_bg">#E8F5E9</color>
     <color name="legal_aid_stroke">#169A50</color>
 
-    <!-- Text Colors -->
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#9CA3AF</color>
-    <color name="text_tertiary">#6B7280</color>
+    <!-- Text Colors (Light Mode) -->
+    <color name="text_primary">#111827</color>
+    <color name="text_secondary">#4B5563</color>
+    <color name="text_tertiary">#9CA3AF</color>
 
     <!-- Baseline standard colors -->
     <color name="black">#FF000000</color>

@@ -32,6 +32,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -40,6 +42,7 @@ import com.example.ukilbhai.chat.ChatAdapter;
 import com.example.ukilbhai.chat.ChatMessage;
 import com.example.ukilbhai.receiver.AirplaneModeReceiver;
 import com.example.ukilbhai.receiver.NetworkConnectivityReceiver;
+import com.example.ukilbhai.util.ThemeHelper;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
@@ -48,6 +51,11 @@ import java.util.List;
 public class ChatActivity extends AppCompatActivity {
 
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 2001;
+
+    private DrawerLayout drawerLayout;
+    private ImageButton btnMenu;
+    private View btnDrawerSettings;
+    private View btnNewChat;
 
     private RecyclerView rvChatMessages;
     private EditText etUserPrompt;
@@ -58,7 +66,6 @@ public class ChatActivity extends AppCompatActivity {
     private MaterialCardView cardActionButton;
     private ImageView ivActionIcon;
     private LinearLayout layoutTypingIndicator;
-    private ImageButton btnBack;
 
     private View layoutAttachmentBar;
     private TextView tvAttachmentTitle;
@@ -84,6 +91,7 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
@@ -98,6 +106,11 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void initViews() {
+        drawerLayout = findViewById(R.id.drawerLayout);
+        btnMenu = findViewById(R.id.btnMenu);
+        btnDrawerSettings = findViewById(R.id.btnDrawerSettings);
+        btnNewChat = findViewById(R.id.btnNewChat);
+
         rvChatMessages = findViewById(R.id.rvChatMessages);
         etUserPrompt = findViewById(R.id.etUserPrompt);
         cardGeminiDock = findViewById(R.id.cardGeminiDock);
@@ -107,7 +120,6 @@ public class ChatActivity extends AppCompatActivity {
         cardActionButton = findViewById(R.id.cardActionButton);
         ivActionIcon = findViewById(R.id.ivActionIcon);
         layoutTypingIndicator = findViewById(R.id.layoutTypingIndicator);
-        btnBack = findViewById(R.id.btnBack);
 
         layoutAttachmentBar = findViewById(R.id.layoutAttachmentBar);
         tvAttachmentTitle = findViewById(R.id.tvAttachmentTitle);
@@ -150,7 +162,31 @@ public class ChatActivity extends AppCompatActivity {
 
     @SuppressLint("ClickableViewAccessibility")
     private void setupListeners() {
-        btnBack.setOnClickListener(v -> finish());
+        if (btnMenu != null) {
+            btnMenu.setOnClickListener(v -> {
+                if (drawerLayout != null) {
+                    drawerLayout.openDrawer(GravityCompat.START);
+                }
+            });
+        }
+
+        if (btnNewChat != null) {
+            btnNewChat.setOnClickListener(v -> {
+                if (drawerLayout != null) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                }
+                startNewChat();
+            });
+        }
+
+        if (btnDrawerSettings != null) {
+            btnDrawerSettings.setOnClickListener(v -> {
+                if (drawerLayout != null) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                }
+                showSettingsDialog();
+            });
+        }
 
         // Micro-interaction: active:scale-95 with haptic feedback
         applyPressScale(btnAddAttachment);
@@ -335,6 +371,71 @@ public class ChatActivity extends AppCompatActivity {
         currentAttachmentContext = null;
         if (layoutAttachmentBar != null) {
             layoutAttachmentBar.setVisibility(View.GONE);
+        }
+    }
+
+    private void startNewChat() {
+        messageList.clear();
+        addInitialWelcomeMessage();
+        chatAdapter.notifyDataSetChanged();
+        Toast.makeText(this, "নতুন আইনি জিজ্ঞাসা শুরু হয়েছে", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showSettingsDialog() {
+        int currentTheme = ThemeHelper.getSavedTheme(this);
+        String currentThemeName = ThemeHelper.getThemeDisplayName(this, currentTheme);
+
+        String[] settingsItems = new String[]{"থিম (Theme): " + currentThemeName};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.Theme_UkilBhai);
+        builder.setTitle("সেটিংস (Settings)");
+        builder.setItems(settingsItems, (dialog, which) -> {
+            if (which == 0) {
+                showThemeSelectionModal();
+            }
+        });
+        builder.setNegativeButton("বন্ধ করুন (Close)", null);
+        builder.show();
+    }
+
+    private void showThemeSelectionModal() {
+        String[] themeOptions = new String[]{"Light (লাইট)", "Dark (ডার্ক)", "System Default (সিস্টেম ডিফল্ট)"};
+        int currentTheme = ThemeHelper.getSavedTheme(this);
+        int checkedIndex = 1; // Default dark
+        if (currentTheme == ThemeHelper.THEME_LIGHT) {
+            checkedIndex = 0;
+        } else if (currentTheme == ThemeHelper.THEME_DARK) {
+            checkedIndex = 1;
+        } else if (currentTheme == ThemeHelper.THEME_SYSTEM) {
+            checkedIndex = 2;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.Theme_UkilBhai);
+        builder.setTitle("Choose Theme (থিম নির্বাচন করুন)");
+        builder.setSingleChoiceItems(themeOptions, checkedIndex, (dialog, which) -> {
+            int newThemeMode = ThemeHelper.THEME_SYSTEM;
+            if (which == 0) {
+                newThemeMode = ThemeHelper.THEME_LIGHT;
+            } else if (which == 1) {
+                newThemeMode = ThemeHelper.THEME_DARK;
+            } else if (which == 2) {
+                newThemeMode = ThemeHelper.THEME_SYSTEM;
+            }
+
+            ThemeHelper.saveTheme(ChatActivity.this, newThemeMode);
+            dialog.dismiss();
+            Toast.makeText(ChatActivity.this, "থিম পরিবর্তিত হয়েছে", Toast.LENGTH_SHORT).show();
+        });
+        builder.setNegativeButton("বাতিল (Cancel)", null);
+        builder.show();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
         }
     }
 

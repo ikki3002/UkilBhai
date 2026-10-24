@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pitch Dark / Linear Dark Baseline -->
+    <color name="bg_dark">#040605</color>
+    <color name="surface_card">#0D1210</color>
+    <color name="card_stroke">#272C2A</color>
+    <color name="card_stroke_glow">#334D3F</color>
+
+    <color name="gemini_dock_bg">#1E1F20</color>
+    <color name="gemini_dock_stroke">#37393B</color>
+    <color name="gemini_live_pill_bg">#253556</color>
+    <color name="gemini_live_bars">#A8C7FA</color>
+    <color name="gemini_icon_tint">#C4C7C5</color>
+    <color name="gemini_mic_pulse">#FF5E7E</color>
+
+    <!-- User Chat Bubble (Gemini Light-Dark Theme) -->
+    <color name="chat_bubble_user_bg">#282A2C</color>
+
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#9CA3AF</color>
+    <color name="text_tertiary">#6B7280</color>
+</resources>

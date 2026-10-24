@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme: Material 3 Dark Theme without ActionBar -->
-    <style name="Theme.UkilBhai" parent="Theme.Material3.Dark.NoActionBar">
+    <!-- Base application theme: Material 3 DayNight Theme without ActionBar -->
+    <style name="Theme.UkilBhai" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand colors -->
         <item name="colorPrimary">@color/primary_emerald</item>
         <item name="colorOnPrimary">@color/white</item>
@@ -19,6 +19,6 @@
         <!-- System bars -->
         <item name="android:statusBarColor">@color/bg_dark</item>
         <item name="android:navigationBarColor">@color/bg_dark</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>
