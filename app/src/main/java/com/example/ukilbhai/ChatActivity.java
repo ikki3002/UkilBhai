@@ -1,10 +1,16 @@
 package com.example.ukilbhai;
 
+import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -13,7 +19,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -23,16 +34,21 @@ import com.example.ukilbhai.chat.ChatAdapter;
 import com.example.ukilbhai.chat.ChatMessage;
 import com.example.ukilbhai.receiver.AirplaneModeReceiver;
 import com.example.ukilbhai.receiver.NetworkConnectivityReceiver;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ChatActivity extends AppCompatActivity {
 
+    private static final int REQUEST_RECORD_AUDIO_PERMISSION = 2001;
+
     private RecyclerView rvChatMessages;
     private EditText etUserPrompt;
-    private FloatingActionButton btnSendMessage;
+    private ImageButton btnAddAttachment;
+    private ImageButton btnVoiceInput;
+    private MaterialCardView cardActionButton;
+    private ImageView ivActionIcon;
     private LinearLayout layoutTypingIndicator;
     private ImageButton btnBack;
 
@@ -50,12 +66,15 @@ public class ChatActivity extends AppCompatActivity {
     private final List<ChatMessage> messageList = new ArrayList<>();
     private final AiLegalClient aiLegalClient = new AiLegalClient();
 
+    private ActivityResultLauncher<Intent> speechRecognizerLauncher;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
         initViews();
+        setupSpeechRecognizer();
         setupRecyclerView();
         setupListeners();
         setupReceivers();
@@ -67,7 +86,10 @@ public class ChatActivity extends AppCompatActivity {
     private void initViews() {
         rvChatMessages = findViewById(R.id.rvChatMessages);
         etUserPrompt = findViewById(R.id.etUserPrompt);
-        btnSendMessage = findViewById(R.id.btnSendMessage);
+        btnAddAttachment = findViewById(R.id.btnAddAttachment);
+        btnVoiceInput = findViewById(R.id.btnVoiceInput);
+        cardActionButton = findViewById(R.id.cardActionButton);
+        ivActionIcon = findViewById(R.id.ivActionIcon);
         layoutTypingIndicator = findViewById(R.id.layoutTypingIndicator);
         btnBack = findViewById(R.id.btnBack);
 
@@ -75,6 +97,27 @@ public class ChatActivity extends AppCompatActivity {
         layoutOfflineBanner = findViewById(R.id.layoutOfflineBanner);
         tvOfflineBannerText = findViewById(R.id.tvOfflineBannerText);
         ivOfflineBannerIcon = findViewById(R.id.ivOfflineBannerIcon);
+    }
+
+    private void setupSpeechRecognizer() {
+        speechRecognizerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        ArrayList<String> matches = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                        if (matches != null && !matches.isEmpty()) {
+                            String spokenText = matches.get(0);
+                            String existing = etUserPrompt.getText().toString().trim();
+                            if (!TextUtils.isEmpty(existing)) {
+                                etUserPrompt.setText(existing + " " + spokenText);
+                            } else {
+                                etUserPrompt.setText(spokenText);
+                            }
+                            etUserPrompt.setSelection(etUserPrompt.getText().length());
+                        }
+                    }
+                }
+        );
     }
 
     private void setupRecyclerView() {
@@ -87,7 +130,105 @@ public class ChatActivity extends AppCompatActivity {
 
     private void setupListeners() {
         btnBack.setOnClickListener(v -> finish());
-        btnSendMessage.setOnClickListener(v -> handleSendMessage());
+
+        // Dynamic transition between Gemini Live Waveform and Send action
+        etUserPrompt.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                boolean hasText = !TextUtils.isEmpty(s.toString().trim());
+                updateActionButtonState(hasText);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        // Pill Action Button: Sends message if text exists, otherwise starts Voice Input
+        cardActionButton.setOnClickListener(v -> {
+            String prompt = etUserPrompt.getText().toString().trim();
+            if (!TextUtils.isEmpty(prompt)) {
+                handleSendMessage();
+            } else {
+                startVoiceInput();
+            }
+        });
+
+        // Dedicated Voice Input (Microphone button)
+        btnVoiceInput.setOnClickListener(v -> startVoiceInput());
+
+        // Quick Legal Templates (+)
+        btnAddAttachment.setOnClickListener(v -> showQuickLegalTopicsDialog());
+    }
+
+    private void updateActionButtonState(boolean hasText) {
+        if (hasText) {
+            cardActionButton.setCardBackgroundColor(ContextCompat.getColor(this, R.color.primary_emerald));
+            ivActionIcon.setImageResource(R.drawable.ic_send);
+            ivActionIcon.setColorFilter(ContextCompat.getColor(this, R.color.white));
+            cardActionButton.setContentDescription("পাঠান");
+        } else {
+            cardActionButton.setCardBackgroundColor(ContextCompat.getColor(this, R.color.gemini_live_pill_bg));
+            ivActionIcon.setImageResource(R.drawable.ic_waveform);
+            ivActionIcon.setColorFilter(ContextCompat.getColor(this, R.color.gemini_live_bars));
+            cardActionButton.setContentDescription("ভয়েস ইনপুট");
+        }
+    }
+
+    private void startVoiceInput() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    REQUEST_RECORD_AUDIO_PERMISSION);
+            return;
+        }
+
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "bn-BD");
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "bn-BD");
+        intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, "bn-BD");
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "আপনার আইনি সমস্যাটি বলুন...");
+
+        try {
+            speechRecognizerLauncher.launch(intent);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, "আপনার ডিভাইসে ভয়েস রিকগনিশন সুবিধা পাওয়া যায়নি।", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showQuickLegalTopicsDialog() {
+        String[] topics = new String[]{
+                "জিডি (সাধারণ ডায়েরি) করার নিয়ম ও নমুনা ড্রাফট",
+                "দেনমোহর ও তালাক সংক্রান্ত আইনি অধিকার",
+                "বাড়িভাড়া আইন ও উচ্ছেদ নোটিশ বিধিমালা",
+                "মোটরযান আইন ও ট্রাফিক মামলার জরিমানা তালিকা",
+                "চেক ডিজঅনার (এনআই এক্ট ১৩৮ ধারা) সংক্রান্ত মামলা"
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.Theme_UkilBhai);
+        builder.setTitle("দ্রুত আইনি বিষয় নির্বাচন করুন");
+        builder.setItems(topics, (dialog, which) -> {
+            etUserPrompt.setText(topics[which]);
+            etUserPrompt.setSelection(etUserPrompt.getText().length());
+        });
+        builder.setNegativeButton("বাতিল", null);
+        builder.show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startVoiceInput();
+            } else {
+                Toast.makeText(this, "ভয়েস ইনপুটের জন্য অডিও রেকর্ডিং পারমিশন প্রয়োজন।", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     private void setupReceivers() {
@@ -224,7 +365,9 @@ public class ChatActivity extends AppCompatActivity {
 
     private void setTyping(boolean isTyping) {
         layoutTypingIndicator.setVisibility(isTyping ? View.VISIBLE : View.GONE);
-        btnSendMessage.setEnabled(!isTyping);
+        cardActionButton.setEnabled(!isTyping);
+        btnVoiceInput.setEnabled(!isTyping);
+        btnAddAttachment.setEnabled(!isTyping);
         if (isTyping) {
             rvChatMessages.smoothScrollToPosition(messageList.size() - 1);
         }
