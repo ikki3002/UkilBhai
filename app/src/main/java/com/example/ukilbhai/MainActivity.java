@@ -48,7 +48,10 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        if (mAuth == null || mAuth.getCurrentUser() == null) {
+        android.content.SharedPreferences prefs = getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE);
+        boolean isGuestMode = prefs.getBoolean("is_guest_mode", false);
+
+        if ((mAuth == null || mAuth.getCurrentUser() == null) && !isGuestMode) {
             redirectToAuth();
             return;
         }
@@ -64,7 +67,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (mAuth == null || mAuth.getCurrentUser() == null) {
+        android.content.SharedPreferences prefs = getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE);
+        boolean isGuestMode = prefs.getBoolean("is_guest_mode", false);
+        if ((mAuth == null || mAuth.getCurrentUser() == null) && !isGuestMode) {
             redirectToAuth();
         }
     }
@@ -101,8 +106,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showProfileDialog() {
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser == null) {
+        FirebaseUser currentUser = mAuth != null ? mAuth.getCurrentUser() : null;
+        android.content.SharedPreferences prefs = getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE);
+        boolean isLocalGuest = prefs.getBoolean("is_guest_mode", false);
+
+        if (currentUser == null && !isLocalGuest) {
             redirectToAuth();
             return;
         }
@@ -135,17 +143,18 @@ public class MainActivity extends AppCompatActivity {
         tvDialogTitle.setText(isBn ? "ব্যবহারকারী প্রোফাইল" : "Citizen Profile");
         btnDialogClose.setOnClickListener(v -> dialog.dismiss());
 
-        boolean isAnonymous = currentUser.isAnonymous();
+        boolean isAnonymous = isLocalGuest || (currentUser != null && currentUser.isAnonymous());
         if (isAnonymous) {
             tvDialogName.setText(isBn ? "অতিথি নাগরিক" : "Guest Citizen");
-            tvDialogEmail.setText(isBn ? "কোনো অ্যাকাউন্ট যুক্ত নেই" : "No account linked");
+            tvDialogEmail.setText(isBn ? "গেস্ট সেশন সক্রিয়" : "Guest Session Active");
             tvDialogBadge.setText(isBn ? "গেস্ট এক্সেস" : "Guest Access");
             layoutLegalDetails.setVisibility(View.GONE);
 
             btnDialogLogout.setText(isBn ? "লগইন বা নিবন্ধন করুন" : "Sign In or Register");
             btnDialogLogout.setOnClickListener(v -> {
                 dialog.dismiss();
-                mAuth.signOut();
+                prefs.edit().clear().apply();
+                if (mAuth != null) mAuth.signOut();
                 redirectToAuth();
             });
         } else {

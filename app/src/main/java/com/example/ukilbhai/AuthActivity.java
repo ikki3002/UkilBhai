@@ -87,8 +87,10 @@ public class AuthActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        // If user is already authenticated, route directly to MainActivity
-        if (mAuth != null && mAuth.getCurrentUser() != null) {
+        // If user is already authenticated or in guest session, route directly to MainActivity
+        android.content.SharedPreferences prefs = getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE);
+        boolean isGuestMode = prefs.getBoolean("is_guest_mode", false);
+        if (isGuestMode || (mAuth != null && mAuth.getCurrentUser() != null)) {
             navigateToMain();
             return;
         }
@@ -279,10 +281,7 @@ public class AuthActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show();
                         navigateToMain();
                     } else {
-                        String errorMsg = task.getException() != null ? task.getException().getMessage() : "Auth Failed";
-                        Toast.makeText(AuthActivity.this,
-                                (isBn ? "লগইন ব্যর্থ হয়েছে: " : "Login failed: ") + errorMsg,
-                                Toast.LENGTH_LONG).show();
+                        handleAuthError(task.getException(), isBn ? "লগইন" : "Login");
                     }
                 });
     }
@@ -355,10 +354,7 @@ public class AuthActivity extends AppCompatActivity {
                         }
                     } else {
                         setLoading(false);
-                        String errorMsg = task.getException() != null ? task.getException().getMessage() : "Registration failed";
-                        Toast.makeText(AuthActivity.this,
-                                (isBn ? "নিবন্ধন ব্যর্থ হয়েছে: " : "Registration failed: ") + errorMsg,
-                                Toast.LENGTH_LONG).show();
+                        handleAuthError(task.getException(), isBn ? "নিবন্ধন" : "Registration");
                     }
                 });
     }
@@ -394,12 +390,53 @@ public class AuthActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show();
                         navigateToMain();
                     } else {
-                        String errorMsg = task.getException() != null ? task.getException().getMessage() : "Error";
-                        Toast.makeText(AuthActivity.this,
-                                (isBn ? "গেস্ট লগইন ব্যর্থ হয়েছে: " : "Guest login failed: ") + errorMsg,
-                                Toast.LENGTH_LONG).show();
+                        // If Firebase Anonymous is disabled or configuration missing, allow local guest access
+                        enterGuestOfflineMode();
                     }
                 });
+    }
+
+    private void enterGuestOfflineMode() {
+        boolean isBn = LanguageHelper.isBengali(this);
+        getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE)
+                .edit()
+                .putBoolean("is_guest_mode", true)
+                .putString("guest_display_name", isBn ? "অতিথি নাগরিক" : "Guest Citizen")
+                .apply();
+
+        Toast.makeText(AuthActivity.this,
+                isBn ? "গেস্ট হিসেবে প্রবেশ করেছেন" : "Entered as Guest",
+                Toast.LENGTH_SHORT).show();
+        navigateToMain();
+    }
+
+    private void handleAuthError(Exception e, String actionName) {
+        boolean isBn = LanguageHelper.isBengali(this);
+        String rawMsg = e != null ? e.getMessage() : "";
+
+        if (rawMsg != null && (rawMsg.contains("CONFIGURATION_NOT_FOUND") || rawMsg.contains("internal error") || rawMsg.contains("INTERNAL_ERROR"))) {
+            new AlertDialog.Builder(this)
+                    .setTitle(isBn ? "Firebase Authentication সক্রিয় নেই" : "Firebase Auth Not Activated")
+                    .setMessage(isBn
+                            ? "ফায়ারবেস প্রজেক্টে Authentication এখনও চালু করা হয়নি। অনুগ্রহ করে নিচের ধাপগুলো সম্পন্ন করুন:\n\n" +
+                              "১. Firebase Console-এ যান (console.firebase.google.com)\n" +
+                              "২. Build > Authentication মেনুতে গিয়ে 'Get Started' চাপুন\n" +
+                              "৩. 'Sign-in method' ট্যাবে গিয়ে 'Email/Password' সক্রিয় (Enable) করে Save করুন।"
+                            : "Firebase Authentication has not been activated in your project yet:\n\n" +
+                              "1. Go to Firebase Console (console.firebase.google.com)\n" +
+                              "2. Navigate to Build > Authentication and click 'Get Started'\n" +
+                              "3. Under 'Sign-in method', enable 'Email/Password' and click Save.")
+                    .setPositiveButton(isBn ? "বুঝেছি" : "OK", (d, w) -> d.dismiss())
+                    .setNeutralButton(isBn ? "গেস্ট হিসেবে চালিয়ে যান" : "Continue as Guest", (d, w) -> {
+                        d.dismiss();
+                        enterGuestOfflineMode();
+                    })
+                    .show();
+        } else {
+            Toast.makeText(this,
+                    (isBn ? actionName + " ব্যর্থ হয়েছে: " : actionName + " failed: ") + (rawMsg != null ? rawMsg : ""),
+                    Toast.LENGTH_LONG).show();
+        }
     }
 
     private void showForgotPasswordDialog() {
