@@ -4,15 +4,28 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.ukilbhai.util.LanguageHelper;
 import com.example.ukilbhai.util.SettingsDialogHelper;
 import com.example.ukilbhai.util.ThemeHelper;
+import com.google.android.material.button.MaterialButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class MainActivity extends AppCompatActivity {
+
+    private FirebaseAuth mAuth;
+    private FirebaseFirestore mFirestore;
 
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -24,11 +37,139 @@ public class MainActivity extends AppCompatActivity {
         ThemeHelper.applyTheme(this);
         LanguageHelper.applyLanguageToApp(this);
         super.onCreate(savedInstanceState);
+
+        mAuth = FirebaseAuth.getInstance();
+        mFirestore = FirebaseFirestore.getInstance();
+
+        if (mAuth.getCurrentUser() == null) {
+            redirectToAuth();
+            return;
+        }
+
         setContentView(R.layout.activity_main);
 
+        setupProfileAvatar();
         setupMainMenuMoreButton();
         setupEmergencyButtons();
         setupAiChatButton();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mAuth.getCurrentUser() == null) {
+            redirectToAuth();
+        }
+    }
+
+    private void redirectToAuth() {
+        Intent intent = new Intent(MainActivity.this, AuthActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
+    private void setupProfileAvatar() {
+        View cardProfileAvatar = findViewById(R.id.cardProfileAvatar);
+        if (cardProfileAvatar != null) {
+            cardProfileAvatar.setOnClickListener(v -> showProfileDialog());
+        }
+    }
+
+    private void showProfileDialog() {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            redirectToAuth();
+            return;
+        }
+
+        boolean isBn = LanguageHelper.isBengali(this);
+
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_user_profile, null);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView tvDialogTitle = dialogView.findViewById(R.id.tvDialogTitle);
+        View btnDialogClose = dialogView.findViewById(R.id.btnDialogClose);
+        TextView tvDialogName = dialogView.findViewById(R.id.tvDialogName);
+        TextView tvDialogEmail = dialogView.findViewById(R.id.tvDialogEmail);
+        TextView tvDialogBadge = dialogView.findViewById(R.id.tvDialogBadge);
+        View layoutLegalDetails = dialogView.findViewById(R.id.layoutLegalDetails);
+        TextView tvLabelNid = dialogView.findViewById(R.id.tvLabelNid);
+        TextView tvDialogNid = dialogView.findViewById(R.id.tvDialogNid);
+        TextView tvLabelLocation = dialogView.findViewById(R.id.tvLabelLocation);
+        TextView tvDialogLocation = dialogView.findViewById(R.id.tvDialogLocation);
+        TextView tvLabelAddress = dialogView.findViewById(R.id.tvLabelAddress);
+        TextView tvDialogAddress = dialogView.findViewById(R.id.tvDialogAddress);
+        MaterialButton btnDialogLogout = dialogView.findViewById(R.id.btnDialogLogout);
+
+        tvDialogTitle.setText(isBn ? "ব্যবহারকারী প্রোফাইল" : "Citizen Profile");
+        btnDialogClose.setOnClickListener(v -> dialog.dismiss());
+
+        boolean isAnonymous = currentUser.isAnonymous();
+        if (isAnonymous) {
+            tvDialogName.setText(isBn ? "অতিথি নাগরিক" : "Guest Citizen");
+            tvDialogEmail.setText(isBn ? "কোনো অ্যাকাউন্ট যুক্ত নেই" : "No account linked");
+            tvDialogBadge.setText(isBn ? "গেস্ট এক্সেস" : "Guest Access");
+            layoutLegalDetails.setVisibility(View.GONE);
+
+            btnDialogLogout.setText(isBn ? "লগইন বা নিবন্ধন করুন" : "Sign In or Register");
+            btnDialogLogout.setOnClickListener(v -> {
+                dialog.dismiss();
+                mAuth.signOut();
+                redirectToAuth();
+            });
+        } else {
+            String displayName = currentUser.getDisplayName();
+            String email = currentUser.getEmail();
+
+            tvDialogName.setText(!TextUtils.isEmpty(displayName) ? displayName : (isBn ? "নাগরিক" : "Citizen"));
+            tvDialogEmail.setText(!TextUtils.isEmpty(email) ? email : "--");
+            tvDialogBadge.setText(isBn ? "নিবন্ধিত নাগরিক" : "Registered Citizen");
+            layoutLegalDetails.setVisibility(View.VISIBLE);
+
+            tvLabelNid.setText(isBn ? "জাতীয় পরিচয়পত্র:" : "National ID:");
+            tvLabelLocation.setText(isBn ? "থানা ও জেলা:" : "Thana & District:");
+            tvLabelAddress.setText(isBn ? "ঠিকানা:" : "Address:");
+
+            String notSpecified = isBn ? "উল্লেখ নেই" : "Not specified";
+            tvDialogNid.setText(notSpecified);
+            tvDialogLocation.setText(notSpecified);
+            tvDialogAddress.setText(notSpecified);
+
+            // Fetch profile data from Cloud Firestore
+            mFirestore.collection("users").document(currentUser.getUid())
+                    .get()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
+                            DocumentSnapshot doc = task.getResult();
+                            String nid = doc.getString("nid");
+                            String location = doc.getString("location");
+                            String address = doc.getString("address");
+
+                            if (!TextUtils.isEmpty(nid)) tvDialogNid.setText(nid);
+                            if (!TextUtils.isEmpty(location)) tvDialogLocation.setText(location);
+                            if (!TextUtils.isEmpty(address)) tvDialogAddress.setText(address);
+                        }
+                    });
+
+            btnDialogLogout.setText(isBn ? "লগআউট করুন" : "Log Out");
+            btnDialogLogout.setOnClickListener(v -> {
+                dialog.dismiss();
+                mAuth.signOut();
+                Toast.makeText(MainActivity.this,
+                        isBn ? "লগআউট সফল হয়েছে" : "Logged out successfully",
+                        Toast.LENGTH_SHORT).show();
+                redirectToAuth();
+            });
+        }
+
+        dialog.show();
     }
 
     private void setupMainMenuMoreButton() {
