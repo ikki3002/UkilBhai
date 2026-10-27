@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.application'
+    id 'com.google.gms.google-services'
 }
 
 def localProperties = new Properties()
@@ -56,6 +57,10 @@ dependencies {
     implementation 'io.noties.markwon:core:4.6.2'
     implementation 'io.noties.markwon:ext-tables:4.6.2'
     implementation 'io.noties.markwon:ext-strikethrough:4.6.2'
+    // Firebase BoM (pinned to 31.2.0 for compileSdk 32 / AGP 7.3.1 compatibility)
+    implementation platform('com.google.firebase:firebase-bom:31.2.0')
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-firestore'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

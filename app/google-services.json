@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "730595914038",
+    "project_id": "ukilbhai-9414f",
+    "storage_bucket": "ukilbhai-9414f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:730595914038:android:7afab680a52a9166770397",
+        "android_client_info": {
+          "package_name": "com.example.ukilbhai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRscW2eUNKlUbUqlZZyv-0Nr-43ps8Nuc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
