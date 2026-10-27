@@ -20,6 +20,8 @@ import com.example.ukilbhai.util.LanguageHelper;
 import com.example.ukilbhai.util.ThemeHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
@@ -77,11 +79,16 @@ public class AuthActivity extends AppCompatActivity {
         LanguageHelper.applyLanguageToApp(this);
         super.onCreate(savedInstanceState);
 
-        mAuth = FirebaseAuth.getInstance();
-        mFirestore = FirebaseFirestore.getInstance();
+        ensureFirebase();
+        try {
+            mAuth = FirebaseAuth.getInstance();
+            mFirestore = FirebaseFirestore.getInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // If user is already authenticated, route directly to MainActivity
-        if (mAuth.getCurrentUser() != null) {
+        if (mAuth != null && mAuth.getCurrentUser() != null) {
             navigateToMain();
             return;
         }
@@ -93,6 +100,23 @@ public class AuthActivity extends AppCompatActivity {
         setupLanguageToggle();
         setupAuthActions();
         updateLanguageUI();
+    }
+
+    private void ensureFirebase() {
+        if (FirebaseApp.getApps(this).isEmpty()) {
+            try {
+                FirebaseOptions options = new FirebaseOptions.Builder()
+                        .setApplicationId("1:730595914038:android:7afab680a52a9166770397")
+                        .setApiKey("AIzaSyBRscW2eUNKlUbUqlZZyv-0Nr-43ps8Nuc")
+                        .setProjectId("ukilbhai-9414f")
+                        .setStorageBucket("ukilbhai-9414f.firebasestorage.app")
+                        .setGcmSenderId("730595914038")
+                        .build();
+                FirebaseApp.initializeApp(this, options);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void initViews() {
