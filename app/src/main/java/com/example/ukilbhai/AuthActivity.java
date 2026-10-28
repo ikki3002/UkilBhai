@@ -30,6 +30,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 
 public class AuthActivity extends AppCompatActivity {
 
@@ -333,6 +334,10 @@ public class AuthActivity extends AppCompatActivity {
                 .addOnCompleteListener(this, task -> {
                     setLoading(false);
                     if (task.isSuccessful()) {
+                        getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE)
+                                .edit()
+                                .putBoolean("is_guest_mode", false)
+                                .apply();
                         Toast.makeText(AuthActivity.this,
                                 isBn ? "সফলভাবে লগইন হয়েছে" : "Logged in successfully",
                                 Toast.LENGTH_SHORT).show();
@@ -405,9 +410,24 @@ public class AuthActivity extends AppCompatActivity {
                                     false
                             );
 
+                            getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE)
+                                    .edit()
+                                    .putBoolean("is_guest_mode", false)
+                                    .putString("profile_name", name)
+                                    .putString("profile_nid", nid)
+                                    .putString("profile_district", district)
+                                    .putString("profile_thana", thana)
+                                    .putString("profile_union", unionWard)
+                                    .putString("profile_post", postOffice)
+                                    .putString("profile_village", villageRoad)
+                                    .putString("profile_location", profile.getLocation())
+                                    .putString("profile_address", profile.getAddress())
+                                    .putString("profile_photo", photoUrl)
+                                    .apply();
+
                             mFirestore.collection("users")
                                     .document(user.getUid())
-                                    .set(profile.toMap())
+                                    .set(profile.toMap(), SetOptions.merge())
                                     .addOnCompleteListener(storeTask -> {
                                         setLoading(false);
                                         Toast.makeText(AuthActivity.this,
