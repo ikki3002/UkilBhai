@@ -268,6 +268,53 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
+                <!-- Profile Photo Picker Frame -->
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginBottom="16dp">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardRegisterPhoto"
+                        android:layout_width="76dp"
+                        android:layout_height="76dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="@color/surface_card"
+                        app:cardCornerRadius="38dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/primary_emerald"
+                        app:strokeWidth="2dp">
+
+                        <ImageView
+                            android:id="@+id/ivRegisterPhoto"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/ic_avatar"
+                            android:contentDescription="Profile Photo" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:layout_alignEnd="@id/cardRegisterPhoto"
+                        android:layout_alignBottom="@id/cardRegisterPhoto"
+                        app:cardBackgroundColor="@color/primary_emerald"
+                        app:cardCornerRadius="13dp"
+                        app:cardElevation="2dp">
+
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_camera"
+                            app:tint="@color/white"
+                            android:contentDescription="Camera Icon" />
+                    </com.google.android.material.card.MaterialCardView>
+                </RelativeLayout>
+
                 <!-- Full Name (Required) -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -377,7 +424,7 @@
                         android:id="@+id/tvLegalHeader"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="আইনি তথ্য ও পরিচয়"
+                        android:text="আইনি তথ্য ও ঠিকানা"
                         android:textColor="@color/text_primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -428,39 +475,155 @@
                         android:textSize="14sp" />
                 </LinearLayout>
 
-                <!-- District & Police Station (Optional) -->
+                <!-- Structured Address: Row 1 - District & Thana/Upazila -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    android:background="@drawable/bg_input_pill"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="16dp">
+                    android:orientation="horizontal">
 
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:contentDescription="Location Icon"
-                        android:src="@drawable/ic_location"
-                        app:tint="@color/text_secondary" />
-
-                    <EditText
-                        android:id="@+id/etRegisterLocation"
+                    <!-- District -->
+                    <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_marginStart="12dp"
+                        android:layout_height="50dp"
                         android:layout_weight="1"
-                        android:background="@null"
-                        android:hint="জেলা ও থানা (যেমন: ঢাকা, ধানমন্ডি) (ঐচ্ছিক)"
-                        android:importantForAutofill="no"
-                        android:inputType="textCapWords"
-                        android:textColor="@color/text_primary"
-                        android:textColorHint="@color/text_secondary"
-                        android:textSize="14sp" />
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_input_pill"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="14dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="Location Icon"
+                            android:src="@drawable/ic_location"
+                            app:tint="@color/text_secondary" />
+
+                        <EditText
+                            android:id="@+id/etRegisterDistrict"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="জেলা (Zilla)"
+                            android:importantForAutofill="no"
+                            android:inputType="textCapWords"
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_secondary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Upazila / Thana -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:background="@drawable/bg_input_pill"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="14dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="Thana Icon"
+                            android:src="@drawable/ic_location"
+                            app:tint="@color/text_secondary" />
+
+                        <EditText
+                            android:id="@+id/etRegisterThana"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="থানা / উপজেলা"
+                            android:importantForAutofill="no"
+                            android:inputType="textCapWords"
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_secondary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
                 </LinearLayout>
 
-                <!-- Present Address (Optional) -->
+                <!-- Structured Address: Row 2 - Union/Ward & Post Office -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:orientation="horizontal">
+
+                    <!-- Union / Ward -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_input_pill"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="14dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="Ward Icon"
+                            android:src="@drawable/ic_tenant"
+                            app:tint="@color/text_secondary" />
+
+                        <EditText
+                            android:id="@+id/etRegisterUnion"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="ওয়ার্ড / ইউনিয়ন"
+                            android:importantForAutofill="no"
+                            android:inputType="textCapWords"
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_secondary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Post Office & Code -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:background="@drawable/bg_input_pill"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="14dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="Post Icon"
+                            android:src="@drawable/ic_mail"
+                            app:tint="@color/text_secondary" />
+
+                        <EditText
+                            android:id="@+id/etRegisterPost"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="ডাকঘর ও পোস্টকোড"
+                            android:importantForAutofill="no"
+                            android:inputType="textCapWords"
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_secondary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Structured Address: Row 3 - Village / Road / Holding -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
@@ -473,18 +636,18 @@
                     <ImageView
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:contentDescription="Address Icon"
+                        android:contentDescription="Village Icon"
                         android:src="@drawable/ic_tenant"
                         app:tint="@color/text_secondary" />
 
                     <EditText
-                        android:id="@+id/etRegisterAddress"
+                        android:id="@+id/etRegisterVillageRoad"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_marginStart="12dp"
                         android:layout_weight="1"
                         android:background="@null"
-                        android:hint="বর্তমান ঠিকানা / গ্রাম (ঐচ্ছিক)"
+                        android:hint="গ্রাম / সড়ক / বাসা বা হোল্ডিং নং (ঐচ্ছিক)"
                         android:importantForAutofill="no"
                         android:inputType="textCapSentences"
                         android:textColor="@color/text_primary"

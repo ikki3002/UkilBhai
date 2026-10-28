@@ -2,16 +2,20 @@ package com.example.ukilbhai;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -52,14 +56,25 @@ public class AuthActivity extends AppCompatActivity {
 
     // Register Form views
     private LinearLayout layoutRegisterForm;
+    private MaterialCardView cardRegisterPhoto;
+    private ImageView ivRegisterPhoto;
+    private Uri selectedPhotoUri = null;
+    private ActivityResultLauncher<String> photoPickerLauncher;
+
     private EditText etRegisterName;
     private EditText etRegisterEmail;
     private EditText etRegisterPassword;
     private TextView tvLegalHeader;
     private TextView tvOptionalTag;
     private EditText etRegisterNid;
-    private EditText etRegisterLocation;
-    private EditText etRegisterAddress;
+
+    // Structured Bangladesh Legal Address
+    private EditText etRegisterDistrict;
+    private EditText etRegisterThana;
+    private EditText etRegisterUnion;
+    private EditText etRegisterPost;
+    private EditText etRegisterVillageRoad;
+
     private MaterialButton btnRegister;
 
     // Bottom action views
@@ -95,12 +110,26 @@ public class AuthActivity extends AppCompatActivity {
             return;
         }
 
+        // Image picker launcher for profile photo
+        photoPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        selectedPhotoUri = uri;
+                        if (ivRegisterPhoto != null) {
+                            ivRegisterPhoto.setImageURI(uri);
+                        }
+                    }
+                }
+        );
+
         setContentView(R.layout.activity_auth);
 
         initViews();
         setupTabSwitching();
         setupLanguageToggle();
         setupAuthActions();
+        setupPhotoPicker();
         updateLanguageUI();
     }
 
@@ -138,18 +167,36 @@ public class AuthActivity extends AppCompatActivity {
         btnSignIn = findViewById(R.id.btnSignIn);
 
         layoutRegisterForm = findViewById(R.id.layoutRegisterForm);
+        cardRegisterPhoto = findViewById(R.id.cardRegisterPhoto);
+        ivRegisterPhoto = findViewById(R.id.ivRegisterPhoto);
+
         etRegisterName = findViewById(R.id.etRegisterName);
         etRegisterEmail = findViewById(R.id.etRegisterEmail);
         etRegisterPassword = findViewById(R.id.etRegisterPassword);
         tvLegalHeader = findViewById(R.id.tvLegalHeader);
         tvOptionalTag = findViewById(R.id.tvOptionalTag);
         etRegisterNid = findViewById(R.id.etRegisterNid);
-        etRegisterLocation = findViewById(R.id.etRegisterLocation);
-        etRegisterAddress = findViewById(R.id.etRegisterAddress);
+
+        etRegisterDistrict = findViewById(R.id.etRegisterDistrict);
+        etRegisterThana = findViewById(R.id.etRegisterThana);
+        etRegisterUnion = findViewById(R.id.etRegisterUnion);
+        etRegisterPost = findViewById(R.id.etRegisterPost);
+        etRegisterVillageRoad = findViewById(R.id.etRegisterVillageRoad);
+
         btnRegister = findViewById(R.id.btnRegister);
 
         tvOrLabel = findViewById(R.id.tvOrLabel);
         btnGuestSignIn = findViewById(R.id.btnGuestSignIn);
+    }
+
+    private void setupPhotoPicker() {
+        if (cardRegisterPhoto != null) {
+            cardRegisterPhoto.setOnClickListener(v -> {
+                if (photoPickerLauncher != null) {
+                    photoPickerLauncher.launch("image/*");
+                }
+            });
+        }
     }
 
     private void setupTabSwitching() {
@@ -209,11 +256,16 @@ public class AuthActivity extends AppCompatActivity {
             etRegisterEmail.setHint("ইমেইল ঠিকানা");
             etRegisterPassword.setHint("পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)");
 
-            tvLegalHeader.setText("আইনি তথ্য ও পরিচয়");
+            tvLegalHeader.setText("আইনি তথ্য ও ঠিকানা");
             tvOptionalTag.setText("ঐচ্ছিক");
             etRegisterNid.setHint("জাতীয় পরিচয়পত্র (NID) নম্বর (ঐচ্ছিক)");
-            etRegisterLocation.setHint("জেলা ও থানা (যেমন: ঢাকা, ধানমন্ডি) (ঐচ্ছিক)");
-            etRegisterAddress.setHint("বর্তমান ঠিকানা / গ্রাম (ঐচ্ছিক)");
+
+            if (etRegisterDistrict != null) etRegisterDistrict.setHint("জেলা (Zilla)");
+            if (etRegisterThana != null) etRegisterThana.setHint("থানা / উপজেলা");
+            if (etRegisterUnion != null) etRegisterUnion.setHint("ওয়ার্ড / ইউনিয়ন");
+            if (etRegisterPost != null) etRegisterPost.setHint("ডাকঘর ও পোস্টকোড");
+            if (etRegisterVillageRoad != null) etRegisterVillageRoad.setHint("গ্রাম / সড়ক / বাসা বা হোল্ডিং নং (ঐচ্ছিক)");
+
             btnRegister.setText("নিবন্ধন সম্পন্ন করুন");
 
             tvOrLabel.setText("অথবা");
@@ -235,11 +287,16 @@ public class AuthActivity extends AppCompatActivity {
             etRegisterEmail.setHint("Email Address");
             etRegisterPassword.setHint("Password (min 6 characters)");
 
-            tvLegalHeader.setText("Legal Identity & Profile");
+            tvLegalHeader.setText("Legal Identity & Address");
             tvOptionalTag.setText("Optional");
             etRegisterNid.setHint("National ID (NID) Number (Optional)");
-            etRegisterLocation.setHint("District & Thana (e.g. Dhaka, Dhanmondi) (Optional)");
-            etRegisterAddress.setHint("Present Address / Village (Optional)");
+
+            if (etRegisterDistrict != null) etRegisterDistrict.setHint("District (Zilla)");
+            if (etRegisterThana != null) etRegisterThana.setHint("Thana / Upazila");
+            if (etRegisterUnion != null) etRegisterUnion.setHint("Union / Ward");
+            if (etRegisterPost != null) etRegisterPost.setHint("Post Office & Code");
+            if (etRegisterVillageRoad != null) etRegisterVillageRoad.setHint("Village / Road / Holding (Optional)");
+
             btnRegister.setText("Complete Registration");
 
             tvOrLabel.setText("OR");
@@ -293,8 +350,12 @@ public class AuthActivity extends AppCompatActivity {
         String password = etRegisterPassword.getText().toString().trim();
 
         String nid = etRegisterNid.getText().toString().trim();
-        String location = etRegisterLocation.getText().toString().trim();
-        String address = etRegisterAddress.getText().toString().trim();
+        String district = etRegisterDistrict != null ? etRegisterDistrict.getText().toString().trim() : "";
+        String thana = etRegisterThana != null ? etRegisterThana.getText().toString().trim() : "";
+        String unionWard = etRegisterUnion != null ? etRegisterUnion.getText().toString().trim() : "";
+        String postOffice = etRegisterPost != null ? etRegisterPost.getText().toString().trim() : "";
+        String villageRoad = etRegisterVillageRoad != null ? etRegisterVillageRoad.getText().toString().trim() : "";
+        String photoUrl = selectedPhotoUri != null ? selectedPhotoUri.toString() : "";
 
         if (TextUtils.isEmpty(name)) {
             etRegisterName.setError(isBn ? "আপনার নাম লিখুন" : "Please enter your name");
@@ -320,11 +381,13 @@ public class AuthActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null) {
-                            // Update display name on Firebase Auth Profile
-                            UserProfileChangeRequest updateProfile = new UserProfileChangeRequest.Builder()
-                                    .setDisplayName(name)
-                                    .build();
-                            user.updateProfile(updateProfile);
+                            // Update display name and photoUri on Firebase Auth Profile
+                            UserProfileChangeRequest.Builder profileBuilder = new UserProfileChangeRequest.Builder()
+                                    .setDisplayName(name);
+                            if (selectedPhotoUri != null) {
+                                profileBuilder.setPhotoUri(selectedPhotoUri);
+                            }
+                            user.updateProfile(profileBuilder.build());
 
                             // Store legal profile document in Cloud Firestore
                             UserProfile profile = new UserProfile(
@@ -332,8 +395,12 @@ public class AuthActivity extends AppCompatActivity {
                                     name,
                                     email,
                                     nid,
-                                    location,
-                                    address,
+                                    photoUrl,
+                                    district,
+                                    thana,
+                                    unionWard,
+                                    postOffice,
+                                    villageRoad,
                                     System.currentTimeMillis(),
                                     false
                             );
@@ -369,10 +436,13 @@ public class AuthActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null) {
-                            // Record guest user entry in Firestore
                             UserProfile guestProfile = new UserProfile(
                                     user.getUid(),
                                     isBn ? "অতিথি ব্যবহারকারী" : "Guest User",
+                                    "",
+                                    "",
+                                    "",
+                                    "",
                                     "",
                                     "",
                                     "",
