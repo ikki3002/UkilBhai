@@ -1,12 +1,15 @@
 package com.example.ukilbhai;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -24,6 +27,7 @@ import com.example.ukilbhai.util.SettingsDialogHelper;
 import com.example.ukilbhai.util.ThemeHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -125,265 +129,318 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupProfileAvatar() {
         View cardProfileAvatar = findViewById(R.id.cardProfileAvatar);
+        View ivProfileAvatar = findViewById(R.id.ivProfileAvatar);
+
+        View.OnClickListener clickListener = v -> showProfileDialog();
+
         if (cardProfileAvatar != null) {
-            cardProfileAvatar.setOnClickListener(v -> showProfileDialog());
+            cardProfileAvatar.setClickable(true);
+            cardProfileAvatar.setFocusable(true);
+            applyPressScale(cardProfileAvatar);
+            cardProfileAvatar.setOnClickListener(clickListener);
+        }
+        if (ivProfileAvatar != null) {
+            ivProfileAvatar.setOnClickListener(clickListener);
         }
     }
 
     private void showProfileDialog() {
-        FirebaseUser currentUser = mAuth != null ? mAuth.getCurrentUser() : null;
-        SharedPreferences prefs = getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE);
-        boolean isLocalGuest = prefs.getBoolean("is_guest_mode", false);
+        try {
+            FirebaseUser currentUser = mAuth != null ? mAuth.getCurrentUser() : null;
+            SharedPreferences prefs = getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE);
+            boolean isLocalGuest = prefs.getBoolean("is_guest_mode", false);
 
-        if (currentUser == null && !isLocalGuest) {
-            redirectToAuth();
-            return;
-        }
+            boolean isBn = LanguageHelper.isBengali(this);
 
-        boolean isBn = LanguageHelper.isBengali(this);
+            View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_user_profile, null);
+            AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                    .setView(dialogView)
+                    .create();
 
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_user_profile, null);
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setView(dialogView)
-                .create();
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            }
 
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        }
+            TextView tvDialogTitle = dialogView.findViewById(R.id.tvDialogTitle);
+            View btnDialogClose = dialogView.findViewById(R.id.btnDialogClose);
+            ImageView ivDialogAvatar = dialogView.findViewById(R.id.ivDialogAvatar);
+            TextView tvDialogName = dialogView.findViewById(R.id.tvDialogName);
+            TextView tvDialogEmail = dialogView.findViewById(R.id.tvDialogEmail);
+            TextView tvDialogBadge = dialogView.findViewById(R.id.tvDialogBadge);
+            View layoutLegalDetails = dialogView.findViewById(R.id.layoutLegalDetails);
+            TextView tvLabelNid = dialogView.findViewById(R.id.tvLabelNid);
+            TextView tvDialogNid = dialogView.findViewById(R.id.tvDialogNid);
+            TextView tvLabelLocation = dialogView.findViewById(R.id.tvLabelLocation);
+            TextView tvDialogLocation = dialogView.findViewById(R.id.tvDialogLocation);
+            TextView tvLabelAddress = dialogView.findViewById(R.id.tvLabelAddress);
+            TextView tvDialogAddress = dialogView.findViewById(R.id.tvDialogAddress);
+            MaterialButton btnDialogEditProfile = dialogView.findViewById(R.id.btnDialogEditProfile);
+            MaterialButton btnDialogLogout = dialogView.findViewById(R.id.btnDialogLogout);
 
-        TextView tvDialogTitle = dialogView.findViewById(R.id.tvDialogTitle);
-        View btnDialogClose = dialogView.findViewById(R.id.btnDialogClose);
-        ImageView ivDialogAvatar = dialogView.findViewById(R.id.ivDialogAvatar);
-        TextView tvDialogName = dialogView.findViewById(R.id.tvDialogName);
-        TextView tvDialogEmail = dialogView.findViewById(R.id.tvDialogEmail);
-        TextView tvDialogBadge = dialogView.findViewById(R.id.tvDialogBadge);
-        View layoutLegalDetails = dialogView.findViewById(R.id.layoutLegalDetails);
-        TextView tvLabelNid = dialogView.findViewById(R.id.tvLabelNid);
-        TextView tvDialogNid = dialogView.findViewById(R.id.tvDialogNid);
-        TextView tvLabelLocation = dialogView.findViewById(R.id.tvLabelLocation);
-        TextView tvDialogLocation = dialogView.findViewById(R.id.tvDialogLocation);
-        TextView tvLabelAddress = dialogView.findViewById(R.id.tvLabelAddress);
-        TextView tvDialogAddress = dialogView.findViewById(R.id.tvDialogAddress);
-        MaterialButton btnDialogEditProfile = dialogView.findViewById(R.id.btnDialogEditProfile);
-        MaterialButton btnDialogLogout = dialogView.findViewById(R.id.btnDialogLogout);
+            if (tvDialogTitle != null) {
+                tvDialogTitle.setText(isBn ? "ব্যবহারকারী প্রোফাইল" : "Citizen Profile");
+            }
+            if (btnDialogClose != null) {
+                btnDialogClose.setOnClickListener(v -> dialog.dismiss());
+            }
 
-        tvDialogTitle.setText(isBn ? "ব্যবহারকারী প্রোফাইল" : "Citizen Profile");
-        btnDialogClose.setOnClickListener(v -> dialog.dismiss());
+            boolean isAnonymous = (currentUser == null) || isLocalGuest || currentUser.isAnonymous();
+            if (isAnonymous) {
+                if (tvDialogName != null) tvDialogName.setText(isBn ? "অতিথি নাগরিক" : "Guest Citizen");
+                if (tvDialogEmail != null) tvDialogEmail.setText(isBn ? "গেস্ট সেশন সক্রিয়" : "Guest Session Active");
+                if (tvDialogBadge != null) tvDialogBadge.setText(isBn ? "গেস্ট এক্সেস" : "Guest Access");
+                if (layoutLegalDetails != null) layoutLegalDetails.setVisibility(View.GONE);
 
-        boolean isAnonymous = isLocalGuest || (currentUser != null && currentUser.isAnonymous());
-        if (isAnonymous) {
-            tvDialogName.setText(isBn ? "অতিথি নাগরিক" : "Guest Citizen");
-            tvDialogEmail.setText(isBn ? "গেস্ট সেশন সক্রিয়" : "Guest Session Active");
-            tvDialogBadge.setText(isBn ? "গেস্ট এক্সেস" : "Guest Access");
-            layoutLegalDetails.setVisibility(View.GONE);
-
-            btnDialogEditProfile.setVisibility(View.GONE);
-            btnDialogLogout.setText(isBn ? "লগইন বা নিবন্ধন করুন" : "Sign In or Register");
-            btnDialogLogout.setOnClickListener(v -> {
-                dialog.dismiss();
-                prefs.edit().clear().apply();
-                if (mAuth != null) mAuth.signOut();
-                redirectToAuth();
-            });
-        } else {
-            String displayName = currentUser.getDisplayName();
-            String email = currentUser.getEmail();
-
-            tvDialogName.setText(!TextUtils.isEmpty(displayName) ? displayName : (isBn ? "নাগরিক" : "Citizen"));
-            tvDialogEmail.setText(!TextUtils.isEmpty(email) ? email : "--");
-            tvDialogBadge.setText(isBn ? "নিবন্ধিত নাগরিক" : "Registered Citizen");
-            layoutLegalDetails.setVisibility(View.VISIBLE);
-            btnDialogEditProfile.setVisibility(View.VISIBLE);
-
-            tvLabelNid.setText(isBn ? "জাতীয় পরিচয়পত্র:" : "National ID:");
-            tvLabelLocation.setText(isBn ? "থানা ও জেলা:" : "Thana & District:");
-            tvLabelAddress.setText(isBn ? "ঠিকানা:" : "Address:");
-            btnDialogEditProfile.setText(isBn ? "তথ্য পরিবর্তন করুন" : "Edit Profile");
-
-            String notSpecified = isBn ? "উল্লেখ নেই" : "Not specified";
-            tvDialogNid.setText(notSpecified);
-            tvDialogLocation.setText(notSpecified);
-            tvDialogAddress.setText(notSpecified);
-
-            // Fetch profile data from Cloud Firestore
-            mFirestore.collection("users").document(currentUser.getUid())
-                    .get()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
-                            DocumentSnapshot doc = task.getResult();
-                            String nid = doc.getString("nid");
-                            String location = doc.getString("location");
-                            String address = doc.getString("address");
-                            String photoUrl = doc.getString("photoUrl");
-
-                            if (!TextUtils.isEmpty(nid)) tvDialogNid.setText(nid);
-                            if (!TextUtils.isEmpty(location)) tvDialogLocation.setText(location);
-                            if (!TextUtils.isEmpty(address)) tvDialogAddress.setText(address);
-                            if (!TextUtils.isEmpty(photoUrl)) {
-                                try {
-                                    ivDialogAvatar.setImageURI(Uri.parse(photoUrl));
-                                } catch (Exception ignored) {}
-                            }
-                        }
+                if (btnDialogEditProfile != null) btnDialogEditProfile.setVisibility(View.GONE);
+                if (btnDialogLogout != null) {
+                    btnDialogLogout.setText(isBn ? "লগইন বা নিবন্ধন করুন" : "Sign In or Register");
+                    btnDialogLogout.setOnClickListener(v -> {
+                        dialog.dismiss();
+                        prefs.edit().clear().apply();
+                        if (mAuth != null) mAuth.signOut();
+                        redirectToAuth();
                     });
+                }
+            } else {
+                String displayName = currentUser.getDisplayName();
+                String email = currentUser.getEmail();
 
-            btnDialogEditProfile.setOnClickListener(v -> {
-                showEditProfileDialog(currentUser, tvDialogName, tvDialogNid, tvDialogLocation, tvDialogAddress, ivDialogAvatar);
-            });
+                if (tvDialogName != null) tvDialogName.setText(!TextUtils.isEmpty(displayName) ? displayName : (isBn ? "নাগরিক" : "Citizen"));
+                if (tvDialogEmail != null) tvDialogEmail.setText(!TextUtils.isEmpty(email) ? email : "--");
+                if (tvDialogBadge != null) tvDialogBadge.setText(isBn ? "নিবন্ধিত নাগরিক" : "Registered Citizen");
+                if (layoutLegalDetails != null) layoutLegalDetails.setVisibility(View.VISIBLE);
+                if (btnDialogEditProfile != null) btnDialogEditProfile.setVisibility(View.VISIBLE);
 
-            btnDialogLogout.setText(isBn ? "লগআউট করুন" : "Log Out");
-            btnDialogLogout.setOnClickListener(v -> {
-                dialog.dismiss();
-                prefs.edit().clear().apply();
-                if (mAuth != null) mAuth.signOut();
-                Toast.makeText(MainActivity.this,
-                        isBn ? "লগআউট সফল হয়েছে" : "Logged out successfully",
-                        Toast.LENGTH_SHORT).show();
-                redirectToAuth();
-            });
+                if (tvLabelNid != null) tvLabelNid.setText(isBn ? "জাতীয় পরিচয়পত্র:" : "National ID:");
+                if (tvLabelLocation != null) tvLabelLocation.setText(isBn ? "থানা ও জেলা:" : "Thana & District:");
+                if (tvLabelAddress != null) tvLabelAddress.setText(isBn ? "ঠিকানা:" : "Address:");
+                if (btnDialogEditProfile != null) btnDialogEditProfile.setText(isBn ? "তথ্য পরিবর্তন করুন" : "Edit Profile");
+
+                String notSpecified = isBn ? "উল্লেখ নেই" : "Not specified";
+                if (tvDialogNid != null) tvDialogNid.setText(notSpecified);
+                if (tvDialogLocation != null) tvDialogLocation.setText(notSpecified);
+                if (tvDialogAddress != null) tvDialogAddress.setText(notSpecified);
+
+                // Fetch profile data from Cloud Firestore safely
+                if (mFirestore != null) {
+                    mFirestore.collection("users").document(currentUser.getUid())
+                            .get()
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
+                                    DocumentSnapshot doc = task.getResult();
+                                    String nid = doc.getString("nid");
+                                    String location = doc.getString("location");
+                                    String address = doc.getString("address");
+                                    String photoUrl = doc.getString("photoUrl");
+
+                                    if (tvDialogNid != null && !TextUtils.isEmpty(nid)) tvDialogNid.setText(nid);
+                                    if (tvDialogLocation != null && !TextUtils.isEmpty(location)) tvDialogLocation.setText(location);
+                                    if (tvDialogAddress != null && !TextUtils.isEmpty(address)) tvDialogAddress.setText(address);
+                                    if (ivDialogAvatar != null && !TextUtils.isEmpty(photoUrl)) {
+                                        try {
+                                            ivDialogAvatar.setImageURI(Uri.parse(photoUrl));
+                                        } catch (Exception ignored) {}
+                                    }
+                                }
+                            });
+                }
+
+                if (btnDialogEditProfile != null) {
+                    btnDialogEditProfile.setOnClickListener(v -> {
+                        showEditProfileDialog(currentUser, tvDialogName, tvDialogNid, tvDialogLocation, tvDialogAddress, ivDialogAvatar);
+                    });
+                }
+
+                if (btnDialogLogout != null) {
+                    btnDialogLogout.setText(isBn ? "লগআউট করুন" : "Log Out");
+                    btnDialogLogout.setOnClickListener(v -> {
+                        dialog.dismiss();
+                        prefs.edit().clear().apply();
+                        if (mAuth != null) mAuth.signOut();
+                        Toast.makeText(MainActivity.this,
+                                isBn ? "লগআউট সফল হয়েছে" : "Logged out successfully",
+                                Toast.LENGTH_SHORT).show();
+                        redirectToAuth();
+                    });
+                }
+            }
+
+            dialog.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "প্রোফাইল খুলতে সমস্যা হয়েছে: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
-
-        dialog.show();
     }
 
     private void showEditProfileDialog(FirebaseUser user, TextView tvParentName, TextView tvParentNid,
                                        TextView tvParentLocation, TextView tvParentAddress, ImageView ivParentAvatar) {
-        boolean isBn = LanguageHelper.isBengali(this);
+        try {
+            boolean isBn = LanguageHelper.isBengali(this);
 
-        View editView = LayoutInflater.from(this).inflate(R.layout.dialog_edit_profile, null);
-        AlertDialog editDialog = new AlertDialog.Builder(this)
-                .setView(editView)
-                .create();
+            View editView = LayoutInflater.from(this).inflate(R.layout.dialog_edit_profile, null);
+            AlertDialog editDialog = new MaterialAlertDialogBuilder(this)
+                    .setView(editView)
+                    .create();
 
-        if (editDialog.getWindow() != null) {
-            editDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        }
+            if (editDialog.getWindow() != null) {
+                editDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            }
 
-        TextView tvEditDialogTitle = editView.findViewById(R.id.tvEditDialogTitle);
-        View btnEditDialogClose = editView.findViewById(R.id.btnEditDialogClose);
-        MaterialCardView cardEditPhoto = editView.findViewById(R.id.cardEditPhoto);
-        ImageView ivEditPhoto = editView.findViewById(R.id.ivEditPhoto);
-        currentEditDialogImageView = ivEditPhoto;
-        tempEditPhotoUri = null;
+            TextView tvEditDialogTitle = editView.findViewById(R.id.tvEditDialogTitle);
+            View btnEditDialogClose = editView.findViewById(R.id.btnEditDialogClose);
+            MaterialCardView cardEditPhoto = editView.findViewById(R.id.cardEditPhoto);
+            ImageView ivEditPhoto = editView.findViewById(R.id.ivEditPhoto);
+            currentEditDialogImageView = ivEditPhoto;
+            tempEditPhotoUri = null;
 
-        EditText etEditName = editView.findViewById(R.id.etEditName);
-        EditText etEditNid = editView.findViewById(R.id.etEditNid);
-        EditText etEditDistrict = editView.findViewById(R.id.etEditDistrict);
-        EditText etEditThana = editView.findViewById(R.id.etEditThana);
-        EditText etEditUnion = editView.findViewById(R.id.etEditUnion);
-        EditText etEditPost = editView.findViewById(R.id.etEditPost);
-        EditText etEditVillageRoad = editView.findViewById(R.id.etEditVillageRoad);
-        MaterialButton btnSaveEditProfile = editView.findViewById(R.id.btnSaveEditProfile);
+            EditText etEditName = editView.findViewById(R.id.etEditName);
+            EditText etEditNid = editView.findViewById(R.id.etEditNid);
+            EditText etEditDistrict = editView.findViewById(R.id.etEditDistrict);
+            EditText etEditThana = editView.findViewById(R.id.etEditThana);
+            EditText etEditUnion = editView.findViewById(R.id.etEditUnion);
+            EditText etEditPost = editView.findViewById(R.id.etEditPost);
+            EditText etEditVillageRoad = editView.findViewById(R.id.etEditVillageRoad);
+            MaterialButton btnSaveEditProfile = editView.findViewById(R.id.btnSaveEditProfile);
 
-        tvEditDialogTitle.setText(isBn ? "প্রোফাইল তথ্য পরিবর্তন" : "Edit Profile Details");
-        btnEditDialogClose.setOnClickListener(v -> editDialog.dismiss());
+            if (tvEditDialogTitle != null) {
+                tvEditDialogTitle.setText(isBn ? "প্রোফাইল তথ্য পরিবর্তন" : "Edit Profile Details");
+            }
+            if (btnEditDialogClose != null) {
+                btnEditDialogClose.setOnClickListener(v -> editDialog.dismiss());
+            }
 
-        etEditName.setText(user.getDisplayName());
+            if (etEditName != null && user != null) {
+                etEditName.setText(user.getDisplayName());
+            }
 
-        // Pre-fill existing data from Firestore
-        mFirestore.collection("users").document(user.getUid())
-                .get()
-                .addOnSuccessListener(doc -> {
-                    if (doc != null && doc.exists()) {
-                        String name = doc.getString("name");
-                        String nid = doc.getString("nid");
-                        String district = doc.getString("district");
-                        String thana = doc.getString("thana");
-                        String unionWard = doc.getString("unionWard");
-                        String postOffice = doc.getString("postOffice");
-                        String villageRoad = doc.getString("villageRoad");
-                        String photoUrl = doc.getString("photoUrl");
+            // Pre-fill existing data from Firestore safely
+            if (mFirestore != null && user != null) {
+                mFirestore.collection("users").document(user.getUid())
+                        .get()
+                        .addOnSuccessListener(doc -> {
+                            if (doc != null && doc.exists()) {
+                                String name = doc.getString("name");
+                                String nid = doc.getString("nid");
+                                String district = doc.getString("district");
+                                String thana = doc.getString("thana");
+                                String unionWard = doc.getString("unionWard");
+                                String postOffice = doc.getString("postOffice");
+                                String villageRoad = doc.getString("villageRoad");
+                                String photoUrl = doc.getString("photoUrl");
 
-                        if (!TextUtils.isEmpty(name)) etEditName.setText(name);
-                        if (!TextUtils.isEmpty(nid)) etEditNid.setText(nid);
-                        if (!TextUtils.isEmpty(district)) etEditDistrict.setText(district);
-                        if (!TextUtils.isEmpty(thana)) etEditThana.setText(thana);
-                        if (!TextUtils.isEmpty(unionWard)) etEditUnion.setText(unionWard);
-                        if (!TextUtils.isEmpty(postOffice)) etEditPost.setText(postOffice);
-                        if (!TextUtils.isEmpty(villageRoad)) etEditVillageRoad.setText(villageRoad);
+                                if (etEditName != null && !TextUtils.isEmpty(name)) etEditName.setText(name);
+                                if (etEditNid != null && !TextUtils.isEmpty(nid)) etEditNid.setText(nid);
+                                if (etEditDistrict != null && !TextUtils.isEmpty(district)) etEditDistrict.setText(district);
+                                if (etEditThana != null && !TextUtils.isEmpty(thana)) etEditThana.setText(thana);
+                                if (etEditUnion != null && !TextUtils.isEmpty(unionWard)) etEditUnion.setText(unionWard);
+                                if (etEditPost != null && !TextUtils.isEmpty(postOffice)) etEditPost.setText(postOffice);
+                                if (etEditVillageRoad != null && !TextUtils.isEmpty(villageRoad)) etEditVillageRoad.setText(villageRoad);
 
-                        if (!TextUtils.isEmpty(photoUrl)) {
-                            try {
-                                ivEditPhoto.setImageURI(Uri.parse(photoUrl));
-                            } catch (Exception ignored) {}
-                        }
+                                if (ivEditPhoto != null && !TextUtils.isEmpty(photoUrl)) {
+                                    try {
+                                        ivEditPhoto.setImageURI(Uri.parse(photoUrl));
+                                    } catch (Exception ignored) {}
+                                }
+                            }
+                        });
+            }
+
+            if (cardEditPhoto != null) {
+                cardEditPhoto.setOnClickListener(v -> {
+                    if (editPhotoPickerLauncher != null) {
+                        editPhotoPickerLauncher.launch("image/*");
                     }
                 });
-
-        cardEditPhoto.setOnClickListener(v -> {
-            if (editPhotoPickerLauncher != null) {
-                editPhotoPickerLauncher.launch("image/*");
-            }
-        });
-
-        btnSaveEditProfile.setText(isBn ? "সংরক্ষণ করুন" : "Save Changes");
-        btnSaveEditProfile.setOnClickListener(v -> {
-            String newName = etEditName.getText().toString().trim();
-            if (TextUtils.isEmpty(newName)) {
-                etEditName.setError(isBn ? "নাম খালি রাখা যাবে না" : "Name cannot be empty");
-                return;
             }
 
-            String newNid = etEditNid.getText().toString().trim();
-            String newDistrict = etEditDistrict.getText().toString().trim();
-            String newThana = etEditThana.getText().toString().trim();
-            String newUnion = etEditUnion.getText().toString().trim();
-            String newPost = etEditPost.getText().toString().trim();
-            String newVillageRoad = etEditVillageRoad.getText().toString().trim();
-            String photoUriString = tempEditPhotoUri != null ? tempEditPhotoUri.toString() : "";
+            if (btnSaveEditProfile != null) {
+                btnSaveEditProfile.setText(isBn ? "সংরক্ষণ করুন" : "Save Changes");
+                btnSaveEditProfile.setOnClickListener(v -> {
+                    String newName = etEditName != null ? etEditName.getText().toString().trim() : "";
+                    if (TextUtils.isEmpty(newName)) {
+                        if (etEditName != null) {
+                            etEditName.setError(isBn ? "নাম খালি রাখা যাবে না" : "Name cannot be empty");
+                        }
+                        return;
+                    }
 
-            btnSaveEditProfile.setEnabled(false);
+                    String newNid = etEditNid != null ? etEditNid.getText().toString().trim() : "";
+                    String newDistrict = etEditDistrict != null ? etEditDistrict.getText().toString().trim() : "";
+                    String newThana = etEditThana != null ? etEditThana.getText().toString().trim() : "";
+                    String newUnion = etEditUnion != null ? etEditUnion.getText().toString().trim() : "";
+                    String newPost = etEditPost != null ? etEditPost.getText().toString().trim() : "";
+                    String newVillageRoad = etEditVillageRoad != null ? etEditVillageRoad.getText().toString().trim() : "";
+                    String photoUriString = tempEditPhotoUri != null ? tempEditPhotoUri.toString() : "";
 
-            UserProfile updatedProfile = new UserProfile(
-                    user.getUid(),
-                    newName,
-                    user.getEmail(),
-                    newNid,
-                    photoUriString,
-                    newDistrict,
-                    newThana,
-                    newUnion,
-                    newPost,
-                    newVillageRoad,
-                    System.currentTimeMillis(),
-                    false
-            );
+                    btnSaveEditProfile.setEnabled(false);
 
-            // Update Auth display name
-            UserProfileChangeRequest.Builder updateReq = new UserProfileChangeRequest.Builder().setDisplayName(newName);
-            if (tempEditPhotoUri != null) {
-                updateReq.setPhotoUri(tempEditPhotoUri);
-            }
-            user.updateProfile(updateReq.build());
+                    UserProfile updatedProfile = new UserProfile(
+                            user != null ? user.getUid() : "",
+                            newName,
+                            user != null ? user.getEmail() : "",
+                            newNid,
+                            photoUriString,
+                            newDistrict,
+                            newThana,
+                            newUnion,
+                            newPost,
+                            newVillageRoad,
+                            System.currentTimeMillis(),
+                            false
+                    );
 
-            // Save to Firestore
-            mFirestore.collection("users").document(user.getUid())
-                    .update(updatedProfile.toMap())
-                    .addOnCompleteListener(task -> {
+                    // Update Auth display name
+                    if (user != null) {
+                        UserProfileChangeRequest.Builder updateReq = new UserProfileChangeRequest.Builder().setDisplayName(newName);
+                        if (tempEditPhotoUri != null) {
+                            updateReq.setPhotoUri(tempEditPhotoUri);
+                        }
+                        user.updateProfile(updateReq.build());
+                    }
+
+                    // Save to Firestore safely
+                    if (mFirestore != null && user != null) {
+                        mFirestore.collection("users").document(user.getUid())
+                                .update(updatedProfile.toMap())
+                                .addOnCompleteListener(task -> {
+                                    btnSaveEditProfile.setEnabled(true);
+                                    editDialog.dismiss();
+
+                                    // Refresh parent profile dialog views
+                                    if (tvParentName != null) tvParentName.setText(newName);
+                                    if (tvParentNid != null && !TextUtils.isEmpty(newNid)) tvParentNid.setText(newNid);
+                                    if (tvParentLocation != null && !TextUtils.isEmpty(updatedProfile.getLocation())) tvParentLocation.setText(updatedProfile.getLocation());
+                                    if (tvParentAddress != null && !TextUtils.isEmpty(updatedProfile.getAddress())) tvParentAddress.setText(updatedProfile.getAddress());
+                                    if (ivParentAvatar != null && tempEditPhotoUri != null) {
+                                        ivParentAvatar.setImageURI(tempEditPhotoUri);
+                                    }
+
+                                    Toast.makeText(MainActivity.this,
+                                            isBn ? "প্রোফাইল সফলভাবে আপডেট হয়েছে!" : "Profile updated successfully!",
+                                            Toast.LENGTH_SHORT).show();
+                                });
+                    } else {
                         btnSaveEditProfile.setEnabled(true);
                         editDialog.dismiss();
-
-                        // Refresh parent profile dialog views
-                        tvParentName.setText(newName);
-                        if (!TextUtils.isEmpty(newNid)) tvParentNid.setText(newNid);
-                        if (!TextUtils.isEmpty(updatedProfile.getLocation())) tvParentLocation.setText(updatedProfile.getLocation());
-                        if (!TextUtils.isEmpty(updatedProfile.getAddress())) tvParentAddress.setText(updatedProfile.getAddress());
-                        if (tempEditPhotoUri != null) {
-                            ivParentAvatar.setImageURI(tempEditPhotoUri);
-                        }
-
+                        if (tvParentName != null) tvParentName.setText(newName);
                         Toast.makeText(MainActivity.this,
                                 isBn ? "প্রোফাইল সফলভাবে আপডেট হয়েছে!" : "Profile updated successfully!",
                                 Toast.LENGTH_SHORT).show();
-                    });
-        });
+                    }
+                });
+            }
 
-        editDialog.show();
+            editDialog.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "এডিট ডায়ালগ খুলতে সমস্যা হয়েছে: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void setupMainMenuMoreButton() {
         View btnMainMenuMore = findViewById(R.id.btnMainMenuMore);
         if (btnMainMenuMore != null) {
+            applyPressScale(btnMainMenuMore);
             btnMainMenuMore.setOnClickListener(v -> {
                 SettingsDialogHelper.showSettingsDialog(this, this::recreate);
             });
@@ -394,12 +451,14 @@ public class MainActivity extends AppCompatActivity {
         // 999 Police & Emergency Hotline
         View btnEmergency999 = findViewById(R.id.btnEmergency999);
         if (btnEmergency999 != null) {
+            applyPressScale(btnEmergency999);
             btnEmergency999.setOnClickListener(v -> dialPhoneNumber("999"));
         }
 
         // 16699 National Legal Aid Services Hotline
         View btnLegalAid16699 = findViewById(R.id.btnLegalAid16699);
         if (btnLegalAid16699 != null) {
+            applyPressScale(btnLegalAid16699);
             btnLegalAid16699.setOnClickListener(v -> dialPhoneNumber("16699"));
         }
     }
@@ -408,11 +467,30 @@ public class MainActivity extends AppCompatActivity {
         // Floating Button: "এআই পরামর্শ নিন"
         View fabAiChat = findViewById(R.id.fabAiChat);
         if (fabAiChat != null) {
+            applyPressScale(fabAiChat);
             fabAiChat.setOnClickListener(v -> {
                 Intent intent = new Intent(MainActivity.this, ChatActivity.class);
                 startActivity(intent);
             });
         }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void applyPressScale(View view) {
+        if (view == null) return;
+        view.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    v.animate().scaleX(0.92f).scaleY(0.92f).setDuration(70).start();
+                    v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start();
+                    break;
+            }
+            return false;
+        });
     }
 
     private void dialPhoneNumber(String phoneNumber) {
