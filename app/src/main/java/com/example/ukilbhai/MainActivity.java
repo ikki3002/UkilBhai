@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
         setupMainMenuMoreButton();
         setupEmergencyButtons();
         setupAiChatButton();
+        updateGuestBanner();
     }
 
     @Override
@@ -100,6 +101,43 @@ public class MainActivity extends AppCompatActivity {
         boolean isGuestMode = prefs.getBoolean("is_guest_mode", false);
         if ((mAuth == null || mAuth.getCurrentUser() == null) && !isGuestMode) {
             redirectToAuth();
+        } else {
+            updateGuestBanner();
+        }
+    }
+
+    private void updateGuestBanner() {
+        View layoutGuestBanner = findViewById(R.id.layoutGuestBanner);
+        MaterialButton btnGuestBannerLogin = findViewById(R.id.btnGuestBannerLogin);
+        TextView tvGuestBannerTitle = findViewById(R.id.tvGuestBannerTitle);
+        TextView tvGuestBannerSubtitle = findViewById(R.id.tvGuestBannerSubtitle);
+
+        FirebaseUser currentUser = mAuth != null ? mAuth.getCurrentUser() : null;
+        SharedPreferences prefs = getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE);
+        boolean isLocalGuest = prefs.getBoolean("is_guest_mode", false);
+        boolean isAnonymous = (currentUser == null) || isLocalGuest || currentUser.isAnonymous();
+
+        boolean isBn = LanguageHelper.isBengali(this);
+
+        if (layoutGuestBanner != null) {
+            if (isAnonymous) {
+                layoutGuestBanner.setVisibility(View.VISIBLE);
+                if (tvGuestBannerTitle != null) {
+                    tvGuestBannerTitle.setText(isBn ? "অতিথি হিসেবে ব্যবহার করছেন" : "Browsing as Guest");
+                }
+                if (tvGuestBannerSubtitle != null) {
+                    tvGuestBannerSubtitle.setText(isBn ? "আইনি প্রোফাইল সংরক্ষণে লগইন বা নিবন্ধন করুন" : "Sign in or register to save legal profile");
+                }
+                if (btnGuestBannerLogin != null) {
+                    btnGuestBannerLogin.setText(isBn ? "লগইন / সাইন আপ" : "Login / Sign Up");
+                    applyPressScale(btnGuestBannerLogin);
+                    btnGuestBannerLogin.setOnClickListener(v -> redirectToAuth());
+                }
+                applyPressScale(layoutGuestBanner);
+                layoutGuestBanner.setOnClickListener(v -> redirectToAuth());
+            } else {
+                layoutGuestBanner.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -174,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
             TextView tvDialogLocation = dialogView.findViewById(R.id.tvDialogLocation);
             TextView tvLabelAddress = dialogView.findViewById(R.id.tvLabelAddress);
             TextView tvDialogAddress = dialogView.findViewById(R.id.tvDialogAddress);
+            MaterialButton btnDialogLoginRegister = dialogView.findViewById(R.id.btnDialogLoginRegister);
             MaterialButton btnDialogEditProfile = dialogView.findViewById(R.id.btnDialogEditProfile);
             MaterialButton btnDialogLogout = dialogView.findViewById(R.id.btnDialogLogout);
 
@@ -190,10 +229,20 @@ public class MainActivity extends AppCompatActivity {
                 if (tvDialogEmail != null) tvDialogEmail.setText(isBn ? "গেস্ট সেশন সক্রিয়" : "Guest Session Active");
                 if (tvDialogBadge != null) tvDialogBadge.setText(isBn ? "গেস্ট এক্সেস" : "Guest Access");
                 if (layoutLegalDetails != null) layoutLegalDetails.setVisibility(View.GONE);
-
                 if (btnDialogEditProfile != null) btnDialogEditProfile.setVisibility(View.GONE);
+
+                // Prominent Login / Register Button for Guests
+                if (btnDialogLoginRegister != null) {
+                    btnDialogLoginRegister.setVisibility(View.VISIBLE);
+                    btnDialogLoginRegister.setText(isBn ? "লগইন বা নিবন্ধন করুন" : "Sign In or Register");
+                    btnDialogLoginRegister.setOnClickListener(v -> {
+                        dialog.dismiss();
+                        redirectToAuth();
+                    });
+                }
+
                 if (btnDialogLogout != null) {
-                    btnDialogLogout.setText(isBn ? "লগইন বা নিবন্ধন করুন" : "Sign In or Register");
+                    btnDialogLogout.setText(isBn ? "অতিথি সেশন বন্ধ করুন" : "Exit Guest Session");
                     btnDialogLogout.setOnClickListener(v -> {
                         dialog.dismiss();
                         prefs.edit().clear().apply();
@@ -205,6 +254,7 @@ public class MainActivity extends AppCompatActivity {
                 String displayName = currentUser.getDisplayName();
                 String email = currentUser.getEmail();
 
+                if (btnDialogLoginRegister != null) btnDialogLoginRegister.setVisibility(View.GONE);
                 if (tvDialogName != null) tvDialogName.setText(!TextUtils.isEmpty(displayName) ? displayName : (isBn ? "নাগরিক" : "Citizen"));
                 if (tvDialogEmail != null) tvDialogEmail.setText(!TextUtils.isEmpty(email) ? email : "--");
                 if (tvDialogBadge != null) tvDialogBadge.setText(isBn ? "নিবন্ধিত নাগরিক" : "Registered Citizen");

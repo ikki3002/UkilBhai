@@ -233,6 +233,25 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Dedicated Login / Register Button (Visible for Guests) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDialogLoginRegister"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="10dp"
+            android:backgroundTint="@color/primary_emerald"
+            android:text="লগইন বা নিবন্ধন করুন"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:cornerRadius="24dp"
+            app:elevation="2dp"
+            app:icon="@drawable/ic_lock"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            app:iconTint="@color/white"
+            android:visibility="gone" />
+
         <!-- Edit Profile Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDialogEditProfile"
