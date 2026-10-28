@@ -15,7 +15,7 @@ import java.io.InputStream;
 
 /**
  * Robust helper to safely store and load profile avatars without SecurityException
- * caused by temporary Android PhotoPicker content URIs.
+ * or unwanted tint distortion on custom user photos.
  */
 public class ImageStorageHelper {
 
@@ -47,12 +47,12 @@ public class ImageStorageHelper {
 
     /**
      * Safely loads an avatar into an ImageView using Bitmap decoding.
-     * Prevents Android ViewRootImpl SecurityException when reading expired picker URIs.
+     * Clears any XML tint filter when loading a custom photo so it never appears as a solid color square.
      */
     public static void loadAvatar(Context context, ImageView imageView, String photoPathOrUri) {
         if (imageView == null) return;
         if (context == null || TextUtils.isEmpty(photoPathOrUri)) {
-            imageView.setImageResource(R.drawable.ic_avatar);
+            setFallbackAvatar(imageView);
             return;
         }
 
@@ -63,7 +63,7 @@ public class ImageStorageHelper {
                 if (file.exists() && file.length() > 0) {
                     Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
                     if (bmp != null) {
-                        imageView.setImageBitmap(bmp);
+                        setBitmapAvatar(imageView, bmp);
                         return;
                     }
                 }
@@ -75,7 +75,7 @@ public class ImageStorageHelper {
                     if (file.exists() && file.length() > 0) {
                         Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
                         if (bmp != null) {
-                            imageView.setImageBitmap(bmp);
+                            setBitmapAvatar(imageView, bmp);
                             return;
                         }
                     }
@@ -92,7 +92,7 @@ public class ImageStorageHelper {
                                 context.getSharedPreferences("ukilbhai_local_session", Context.MODE_PRIVATE)
                                         .edit().putString("profile_photo", localPath).apply();
                             }
-                            imageView.setImageBitmap(bmp);
+                            setBitmapAvatar(imageView, bmp);
                             return;
                         }
                     }
@@ -106,7 +106,23 @@ public class ImageStorageHelper {
             t.printStackTrace();
         }
 
-        // Safe fallback default avatar
+        setFallbackAvatar(imageView);
+    }
+
+    private static void setBitmapAvatar(ImageView imageView, Bitmap bmp) {
+        imageView.setImageTintList(null);
+        imageView.setColorFilter(null);
+        imageView.setPadding(0, 0, 0, 0);
+        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        imageView.setImageBitmap(bmp);
+    }
+
+    private static void setFallbackAvatar(ImageView imageView) {
+        imageView.setImageTintList(null);
+        imageView.setColorFilter(null);
+        int pad = (int) (imageView.getResources().getDisplayMetrics().density * 8);
+        imageView.setPadding(pad, pad, pad, pad);
+        imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         imageView.setImageResource(R.drawable.ic_avatar);
     }
 }

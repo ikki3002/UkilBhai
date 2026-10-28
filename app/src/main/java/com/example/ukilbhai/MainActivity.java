@@ -109,6 +109,11 @@ public class MainActivity extends AppCompatActivity {
             redirectToAuth();
         } else {
             updateGuestBanner();
+            ImageView ivProfileAvatar = findViewById(R.id.ivProfileAvatar);
+            if (ivProfileAvatar != null) {
+                String cachedPhoto = prefs.getString("profile_photo", "");
+                ImageStorageHelper.loadAvatar(this, ivProfileAvatar, cachedPhoto);
+            }
         }
     }
 
@@ -347,6 +352,11 @@ public class MainActivity extends AppCompatActivity {
                                         .putString("profile_address", address != null ? address : "")
                                         .putString("profile_photo", photoUrl != null ? photoUrl : "")
                                         .apply();
+
+                                ImageView ivTopAvatar = findViewById(R.id.ivProfileAvatar);
+                                if (ivTopAvatar != null && !TextUtils.isEmpty(photoUrl)) {
+                                    ImageStorageHelper.loadAvatar(MainActivity.this, ivTopAvatar, photoUrl);
+                                }
                             }
                         });
             }
