@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.ukilbhai.model.UserProfile;
 import com.example.ukilbhai.util.LanguageHelper;
+import com.example.ukilbhai.util.ImageStorageHelper;
 import com.example.ukilbhai.util.ThemeHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
@@ -60,6 +61,7 @@ public class AuthActivity extends AppCompatActivity {
     private MaterialCardView cardRegisterPhoto;
     private ImageView ivRegisterPhoto;
     private Uri selectedPhotoUri = null;
+    private String selectedPhotoPath = null;
     private ActivityResultLauncher<String> photoPickerLauncher;
 
     private EditText etRegisterName;
@@ -117,8 +119,10 @@ public class AuthActivity extends AppCompatActivity {
                 uri -> {
                     if (uri != null) {
                         selectedPhotoUri = uri;
+                        String localPath = ImageStorageHelper.saveImageToInternalStorage(this, uri);
+                        selectedPhotoPath = localPath != null ? localPath : uri.toString();
                         if (ivRegisterPhoto != null) {
-                            ivRegisterPhoto.setImageURI(uri);
+                            ImageStorageHelper.loadAvatar(this, ivRegisterPhoto, selectedPhotoPath);
                         }
                     }
                 }
@@ -360,7 +364,7 @@ public class AuthActivity extends AppCompatActivity {
         String unionWard = etRegisterUnion != null ? etRegisterUnion.getText().toString().trim() : "";
         String postOffice = etRegisterPost != null ? etRegisterPost.getText().toString().trim() : "";
         String villageRoad = etRegisterVillageRoad != null ? etRegisterVillageRoad.getText().toString().trim() : "";
-        String photoUrl = selectedPhotoUri != null ? selectedPhotoUri.toString() : "";
+        String photoUrl = selectedPhotoPath != null ? selectedPhotoPath : (selectedPhotoUri != null ? selectedPhotoUri.toString() : "");
 
         if (TextUtils.isEmpty(name)) {
             etRegisterName.setError(isBn ? "আপনার নাম লিখুন" : "Please enter your name");

@@ -24,6 +24,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.ukilbhai.model.UserProfile;
 import com.example.ukilbhai.util.LanguageHelper;
 import com.example.ukilbhai.util.SettingsDialogHelper;
+import com.example.ukilbhai.util.ImageStorageHelper;
 import com.example.ukilbhai.util.ThemeHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityResultLauncher<String> editPhotoPickerLauncher;
     private Uri tempEditPhotoUri = null;
+    private String tempEditPhotoPath = null;
     private ImageView currentEditDialogImageView = null;
 
     @Override
@@ -80,8 +82,10 @@ public class MainActivity extends AppCompatActivity {
                 uri -> {
                     if (uri != null) {
                         tempEditPhotoUri = uri;
+                        String localPath = ImageStorageHelper.saveImageToInternalStorage(this, uri);
+                        tempEditPhotoPath = localPath != null ? localPath : uri.toString();
                         if (currentEditDialogImageView != null) {
-                            currentEditDialogImageView.setImageURI(uri);
+                            ImageStorageHelper.loadAvatar(this, currentEditDialogImageView, tempEditPhotoPath);
                         }
                     }
                 }
@@ -173,10 +177,8 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences prefs = getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE);
         String cachedPhoto = prefs.getString("profile_photo", "");
-        if (ivProfileAvatar != null && !TextUtils.isEmpty(cachedPhoto)) {
-            try {
-                ivProfileAvatar.setImageURI(Uri.parse(cachedPhoto));
-            } catch (Exception ignored) {}
+        if (ivProfileAvatar != null) {
+            ImageStorageHelper.loadAvatar(this, ivProfileAvatar, cachedPhoto);
         }
 
         View.OnClickListener clickListener = v -> showProfileDialog();
@@ -252,10 +254,8 @@ public class MainActivity extends AppCompatActivity {
             if (tvDialogNid != null) tvDialogNid.setText(!TextUtils.isEmpty(cachedNid) ? cachedNid : notSpecified);
             if (tvDialogLocation != null) tvDialogLocation.setText(!TextUtils.isEmpty(cachedLocation) ? cachedLocation : notSpecified);
             if (tvDialogAddress != null) tvDialogAddress.setText(!TextUtils.isEmpty(cachedAddress) ? cachedAddress : notSpecified);
-            if (ivDialogAvatar != null && !TextUtils.isEmpty(cachedPhoto)) {
-                try {
-                    ivDialogAvatar.setImageURI(Uri.parse(cachedPhoto));
-                } catch (Exception ignored) {}
+            if (ivDialogAvatar != null) {
+                ImageStorageHelper.loadAvatar(this, ivDialogAvatar, cachedPhoto);
             }
 
             // Legal details are available for viewing & editing
@@ -337,9 +337,7 @@ public class MainActivity extends AppCompatActivity {
                                 if (tvDialogLocation != null && !TextUtils.isEmpty(location)) tvDialogLocation.setText(location);
                                 if (tvDialogAddress != null && !TextUtils.isEmpty(address)) tvDialogAddress.setText(address);
                                 if (ivDialogAvatar != null && !TextUtils.isEmpty(photoUrl)) {
-                                    try {
-                                        ivDialogAvatar.setImageURI(Uri.parse(photoUrl));
-                                    } catch (Exception ignored) {}
+                                    ImageStorageHelper.loadAvatar(MainActivity.this, ivDialogAvatar, photoUrl);
                                 }
 
                                 prefs.edit()
@@ -382,6 +380,7 @@ public class MainActivity extends AppCompatActivity {
             ImageView ivEditPhoto = editView.findViewById(R.id.ivEditPhoto);
             currentEditDialogImageView = ivEditPhoto;
             tempEditPhotoUri = null;
+            tempEditPhotoPath = null;
 
             EditText etEditName = editView.findViewById(R.id.etEditName);
             EditText etEditNid = editView.findViewById(R.id.etEditNid);
@@ -423,11 +422,9 @@ public class MainActivity extends AppCompatActivity {
             if (etEditPost != null && !TextUtils.isEmpty(cachedPost)) etEditPost.setText(cachedPost);
             if (etEditVillageRoad != null && !TextUtils.isEmpty(cachedVillage)) etEditVillageRoad.setText(cachedVillage);
 
-            if (ivEditPhoto != null && !TextUtils.isEmpty(cachedPhoto)) {
-                try {
-                    ivEditPhoto.setImageURI(Uri.parse(cachedPhoto));
-                    tempEditPhotoUri = Uri.parse(cachedPhoto);
-                } catch (Exception ignored) {}
+            tempEditPhotoPath = cachedPhoto;
+            if (ivEditPhoto != null) {
+                ImageStorageHelper.loadAvatar(this, ivEditPhoto, cachedPhoto);
             }
 
             // Pre-fill existing data from Firestore safely if online
@@ -453,11 +450,9 @@ public class MainActivity extends AppCompatActivity {
                                 if (etEditPost != null && TextUtils.isEmpty(etEditPost.getText()) && !TextUtils.isEmpty(postOffice)) etEditPost.setText(postOffice);
                                 if (etEditVillageRoad != null && TextUtils.isEmpty(etEditVillageRoad.getText()) && !TextUtils.isEmpty(villageRoad)) etEditVillageRoad.setText(villageRoad);
 
-                                if (ivEditPhoto != null && tempEditPhotoUri == null && !TextUtils.isEmpty(photoUrl)) {
-                                    try {
-                                        ivEditPhoto.setImageURI(Uri.parse(photoUrl));
-                                        tempEditPhotoUri = Uri.parse(photoUrl);
-                                    } catch (Exception ignored) {}
+                                if (ivEditPhoto != null && TextUtils.isEmpty(tempEditPhotoPath) && !TextUtils.isEmpty(photoUrl)) {
+                                    ImageStorageHelper.loadAvatar(MainActivity.this, ivEditPhoto, photoUrl);
+                                    tempEditPhotoPath = photoUrl;
                                 }
                             }
                         });
@@ -495,7 +490,7 @@ public class MainActivity extends AppCompatActivity {
                     String newUnion = etEditUnion != null ? etEditUnion.getText().toString().trim() : "";
                     String newPost = etEditPost != null ? etEditPost.getText().toString().trim() : "";
                     String newVillageRoad = etEditVillageRoad != null ? etEditVillageRoad.getText().toString().trim() : "";
-                    String photoUriString = tempEditPhotoUri != null ? tempEditPhotoUri.toString() : prefs.getString("profile_photo", "");
+                    String photoUriString = !TextUtils.isEmpty(tempEditPhotoPath) ? tempEditPhotoPath : prefs.getString("profile_photo", "");
 
                     String uid = user != null ? user.getUid() : "guest_" + System.currentTimeMillis();
                     String email = user != null && user.getEmail() != null ? user.getEmail() : "";
@@ -535,18 +530,14 @@ public class MainActivity extends AppCompatActivity {
                     if (tvParentNid != null) tvParentNid.setText(!TextUtils.isEmpty(newNid) ? newNid : (isBn ? "উল্লেখ নেই" : "Not specified"));
                     if (tvParentLocation != null) tvParentLocation.setText(!TextUtils.isEmpty(updatedProfile.getLocation()) ? updatedProfile.getLocation() : (isBn ? "উল্লেখ নেই" : "Not specified"));
                     if (tvParentAddress != null) tvParentAddress.setText(!TextUtils.isEmpty(updatedProfile.getAddress()) ? updatedProfile.getAddress() : (isBn ? "উল্লেখ নেই" : "Not specified"));
-                    if (ivParentAvatar != null && !TextUtils.isEmpty(photoUriString)) {
-                        try {
-                            ivParentAvatar.setImageURI(Uri.parse(photoUriString));
-                        } catch (Exception ignored) {}
+                    if (ivParentAvatar != null) {
+                        ImageStorageHelper.loadAvatar(MainActivity.this, ivParentAvatar, photoUriString);
                     }
 
                     // Update top bar avatar if exists
                     ImageView ivTopAvatar = findViewById(R.id.ivProfileAvatar);
-                    if (ivTopAvatar != null && !TextUtils.isEmpty(photoUriString)) {
-                        try {
-                            ivTopAvatar.setImageURI(Uri.parse(photoUriString));
-                        } catch (Exception ignored) {}
+                    if (ivTopAvatar != null) {
+                        ImageStorageHelper.loadAvatar(MainActivity.this, ivTopAvatar, photoUriString);
                     }
 
                     // 3. Update Auth display name & photo in background
