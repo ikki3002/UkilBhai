@@ -69,8 +69,24 @@ public class AiLegalClient {
             String groqKey = BuildConfig.GROQ_API_KEY;
             String geminiKey = BuildConfig.GEMINI_API_KEY;
             String hfKey = BuildConfig.HUGGINGFACE_API_KEY;
+            String ragUrl = BuildConfig.RAG_BACKEND_URL;
 
             List<String> attemptedErrors = new ArrayList<>();
+
+            // 0. Try Legal RAG Backend first if configured (Hugging Face Space or local server)
+            if (ragUrl != null && !ragUrl.trim().isEmpty()) {
+                try {
+                    Log.d(TAG, "Attempting Legal RAG backend: " + ragUrl);
+                    String reply = callRagBackend(ragUrl.trim(), history, userMessage);
+                    if (reply != null && !reply.trim().isEmpty()) {
+                        mainHandler.post(() -> callback.onSuccess(reply, "Ukil Bhai Legal RAG"));
+                        return;
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "RAG backend failed, falling back to direct cloud models: " + e.getMessage());
+                    attemptedErrors.add("Legal RAG: " + e.getMessage());
+                }
+            }
 
             // 1. Try Groq Cloud first (Known healthy & working on your account)
             if (groqKey != null && !groqKey.trim().isEmpty()) {
@@ -281,5 +297,76 @@ public class AiLegalClient {
             }
         }
         throw new RuntimeException("HTTP " + statusCode + ": " + responseStr);
+    }
+
+    private String callRagBackend(String baseUrl, List<ChatMessage> history, String userMessage) throws Exception {
+        String askEndpoint = baseUrl.endsWith("/ask") ? baseUrl : (baseUrl.endsWith("/") ? baseUrl + "ask" : baseUrl + "/ask");
+        URL url = new URL(askEndpoint);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+        conn.setConnectTimeout(15000);
+        conn.setReadTimeout(35000);
+        conn.setDoOutput(true);
+
+        JSONObject root = new JSONObject();
+        root.put("query", userMessage);
+        root.put("top_k", 4);
+
+        if (history != null && !history.isEmpty()) {
+            JSONArray histArray = new JSONArray();
+            int start = Math.max(0, history.size() - 6);
+            for (int i = start; i < history.size(); i++) {
+                ChatMessage m = history.get(i);
+                if (m.getText() == null || m.getText().trim().isEmpty()) continue;
+                JSONObject chatObj = new JSONObject();
+                chatObj.put("role", m.getSender() == ChatMessage.SENDER_USER ? "user" : "assistant");
+                chatObj.put("content", m.getText());
+                histArray.put(chatObj);
+            }
+            root.put("history", histArray);
+        }
+
+        byte[] input = root.toString().getBytes(StandardCharsets.UTF_8);
+        try (OutputStream os = conn.getOutputStream()) {
+            os.write(input, 0, input.length);
+        }
+
+        int statusCode = conn.getResponseCode();
+        InputStream stream = (statusCode >= 200 && statusCode < 300) ? conn.getInputStream() : conn.getErrorStream();
+        StringBuilder responseStr = new StringBuilder();
+        if (stream != null) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    responseStr.append(line);
+                }
+            }
+        }
+
+        if (statusCode >= 200 && statusCode < 300) {
+            JSONObject resJson = new JSONObject(responseStr.toString());
+            String answer = resJson.optString("answer", "");
+            JSONArray citations = resJson.optJSONArray("citations");
+            if (citations != null && citations.length() > 0) {
+                StringBuilder sb = new StringBuilder(answer);
+                sb.append("\n\n---\n**উদ্ধৃত আইন ও ধারাসমূহ (BLAD):**\n");
+                for (int i = 0; i < citations.length(); i++) {
+                    JSONObject c = citations.getJSONObject(i);
+                    String act = c.optString("act_title", "");
+                    String year = c.optString("act_year", "");
+                    String sec = c.optString("section_title", "");
+                    sb.append("• 📜 **").append(act).append(year.isEmpty() ? "" : " (" + year + ")").append("**");
+                    if (!sec.isEmpty()) {
+                        sb.append(" — *").append(sec).append("*");
+                    }
+                    sb.append("\n");
+                }
+                return sb.toString();
+            }
+            return answer;
+        }
+
+        throw new RuntimeException("RAG HTTP " + statusCode + ": " + responseStr);
     }
 }
