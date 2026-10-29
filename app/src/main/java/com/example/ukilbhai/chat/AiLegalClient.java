@@ -120,7 +120,7 @@ public class AiLegalClient {
                         Log.d(TAG, "Attempting Groq Cloud model: " + model);
                         String reply = callOpenAiCompatible(GROQ_API_URL, groqKey.trim(), model, history, augmentedMessage);
                         if (reply != null && !reply.trim().isEmpty()) {
-                            String apiLabel = finalRetrieved.isEmpty() ? "Groq API (" + model + ")" : "Groq API (" + model + ") • বাংলাদেশ আইন ভাণ্ডার RAG";
+                            String apiLabel = finalRetrieved.isEmpty() ? "Groq API (" + model + ")" : "Groq API (" + model + ") • ⚖️ বাংলাদেশ আইন ভাণ্ডার RAG";
                             String formatted = formatResponseWithCitationsAndSignature(reply, finalRetrieved, apiLabel);
                             mainHandler.post(() -> callback.onSuccess(formatted, apiLabel));
                             return;
@@ -139,7 +139,7 @@ public class AiLegalClient {
                         Log.d(TAG, "Attempting Gemini model: " + model);
                         String reply = callGeminiApi(geminiKey.trim(), model, history, augmentedMessage);
                         if (reply != null && !reply.trim().isEmpty()) {
-                            String apiLabel = finalRetrieved.isEmpty() ? "Google Gemini API (" + model + ")" : "Google Gemini API (" + model + ") • বাংলাদেশ আইন ভাণ্ডার RAG";
+                            String apiLabel = finalRetrieved.isEmpty() ? "Google Gemini API (" + model + ")" : "Google Gemini API (" + model + ") • ⚖️ বাংলাদেশ আইন ভাণ্ডার RAG";
                             String formatted = formatResponseWithCitationsAndSignature(reply, finalRetrieved, apiLabel);
                             mainHandler.post(() -> callback.onSuccess(formatted, apiLabel));
                             return;
@@ -157,7 +157,7 @@ public class AiLegalClient {
                     Log.d(TAG, "Attempting Hugging Face router...");
                     String reply = callOpenAiCompatible(HF_ROUTER_URL, hfKey.trim(), HF_MODEL, history, augmentedMessage);
                     if (reply != null && !reply.trim().isEmpty()) {
-                        String apiLabel = finalRetrieved.isEmpty() ? "Hugging Face API (" + HF_MODEL + ")" : "Hugging Face API (" + HF_MODEL + ") • বাংলাদেশ আইন ভাণ্ডার RAG";
+                        String apiLabel = finalRetrieved.isEmpty() ? "Hugging Face API (" + HF_MODEL + ")" : "Hugging Face API (" + HF_MODEL + ") • ⚖️ বাংলাদেশ আইন ভাণ্ডার RAG";
                         String formatted = formatResponseWithCitationsAndSignature(reply, finalRetrieved, apiLabel);
                         mainHandler.post(() -> callback.onSuccess(formatted, apiLabel));
                         return;
@@ -333,7 +333,7 @@ public class AiLegalClient {
         private String formatResponseWithCitationsAndSignature(String reply, List<LegalSection> sections, String apiProviderLabel) {
         StringBuilder sb = new StringBuilder(reply != null ? reply.trim() : "");
         if (sections != null && !sections.isEmpty()) {
-            sb.append("\n\n---\n**উদ্ধৃত আইন ও ধারাসমূহ (BLAD):**\n");
+            sb.append("\n\n---\n**উদ্ধৃত আইন ও ধারাসমূহ (On-Device RAG):**\n");
             for (LegalSection s : sections) {
                 sb.append("• 📜 **").append(s.getCitationHeader()).append("**");
                 if (!s.getSectionTitle().isEmpty()) {
