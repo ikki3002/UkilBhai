@@ -28,7 +28,7 @@ public class LegalDatabaseHelper {
 
     private static final String TAG = "LegalDatabaseHelper";
     private static final String DB_NAME = "legal_acts.db";
-    private static final int CURRENT_DB_VERSION = 2; // Incremented for enriched keywords & clean schema
+    private static final int CURRENT_DB_VERSION = 3; // Incremented for Legal Aid Handbook integration
     private static final String PREF_NAME = "legal_rag_prefs";
     private static final String KEY_DB_VERSION = "copied_db_version";
 
@@ -199,6 +199,16 @@ public class LegalDatabaseHelper {
             terms.add("প্রতারণা");
             terms.add("জালিয়াতি");
             terms.add("cheating");
+        }
+        if (lower.contains("লিগ্যাল") || lower.contains("সহায়তা") || lower.contains("১৬৬৯৯")
+                || lower.contains("সরকারি উকিল") || lower.contains("বিনা খরচে") || lower.contains("বিনা মূল্যে")
+                || lower.contains("উকিল খরচ") || lower.contains("গরিব") || lower.contains("অসচ্ছল")
+                || lower.contains("মধ্যস্থতা") || lower.contains("মেডিয়েশন") || lower.contains("সালিশ")) {
+            terms.add("লিগ্যাল");
+            terms.add("সহায়তা");
+            terms.add("১৬৬৯৯");
+            terms.add("যোগ্যতা");
+            terms.add("মধ্যস্থতা");
         }
 
         return terms;

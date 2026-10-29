@@ -74,8 +74,8 @@ public class SettingsDialogHelper {
         int sectionCount = dbHelper.getSectionCount();
         int actCount = dbHelper.getActCount();
 
-        if (sectionCount == 0) sectionCount = 3501;
-        if (actCount == 0) actCount = 37;
+        if (sectionCount == 0) sectionCount = 3508;
+        if (actCount == 0) actCount = 38;
 
         tvRagEngineStatus.setText(isReady ? "ইঞ্জিন স্থিতি: প্রস্তুত ও ১০০% সক্রিয়" : "ইঞ্জিন স্থিতি: লোড হচ্ছে...");
         tvRagStats.setText("• " + actCount + "টি জাতীয় আইন | " + sectionCount + "+ ধারা ডিভাইসে সংরক্ষিত\n• SQLite FTS5 হাইপারস্পিড অন-ডিভাইস রিট্রিভার\n• অফলাইনেও তাত্ক্ষণিক সঠিক আইন ও ধারা উদ্ধার করে");

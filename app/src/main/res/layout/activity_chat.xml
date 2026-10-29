@@ -64,7 +64,7 @@
                     android:id="@+id/tvRagBadge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="⚖️ আইন ভাণ্ডার সক্রিয় (৩,৫০১ ধারা)"
+                    android:text="⚖️ আইন ভাণ্ডার সক্রিয় (৩,৫০৮ ধারা)"
                     android:textColor="@color/primary_emerald"
                     android:textSize="10sp"
                     android:textStyle="bold" />

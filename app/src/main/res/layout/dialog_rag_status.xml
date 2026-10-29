@@ -94,7 +94,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="• ৩৭টি জাতীয় আইন | ৩,৫০১টি ধারা ইনডেক্সড\n• SQLite FTS5 হাইপারস্পিড রিট্রিভার\n• অফলাইনেও তাৎক্ষণিক ধারা উদ্ধৃতি তৈরি করে"
+                android:text="• ৩৭টি জাতীয় আইন | ৩,৫০৮টি ধারা ইনডেক্সড\n• SQLite FTS5 হাইপারস্পিড রিট্রিভার\n• অফলাইনেও তাৎক্ষণিক ধারা উদ্ধৃতি তৈরি করে"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
                 android:lineSpacingExtra="3dp" />
