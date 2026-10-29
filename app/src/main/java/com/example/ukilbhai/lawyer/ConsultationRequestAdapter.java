@@ -26,13 +26,28 @@ public class ConsultationRequestAdapter extends RecyclerView.Adapter<Consultatio
         void onDecline(ConsultationRequest request);
     }
 
+    public interface OnCitizenRequestListener {
+        void onRequestClick(ConsultationRequest request);
+    }
+
     private final Context context;
     private final List<ConsultationRequest> requestList = new ArrayList<>();
-    private final OnRequestActionListener listener;
+    private final boolean isCitizenViewer;
+    private final OnRequestActionListener lawyerListener;
+    private final OnCitizenRequestListener citizenListener;
 
     public ConsultationRequestAdapter(Context context, OnRequestActionListener listener) {
         this.context = context;
-        this.listener = listener;
+        this.isCitizenViewer = false;
+        this.lawyerListener = listener;
+        this.citizenListener = null;
+    }
+
+    public ConsultationRequestAdapter(Context context, boolean isCitizenViewer, OnCitizenRequestListener listener) {
+        this.context = context;
+        this.isCitizenViewer = isCitizenViewer;
+        this.lawyerListener = null;
+        this.citizenListener = listener;
     }
 
     public void setRequests(List<ConsultationRequest> list) {
@@ -54,14 +69,21 @@ public class ConsultationRequestAdapter extends RecyclerView.Adapter<Consultatio
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ConsultationRequest req = requestList.get(position);
 
-        holder.tvCitizenName.setText(req.getCitizenName() != null ? req.getCitizenName() : "নাগরিক");
-        holder.tvCitizenDistrict.setText(!TextUtils.isEmpty(req.getCitizenDistrict())
-                ? "📍 জেলা: " + req.getCitizenDistrict() : "সাধারণ নাগরিক");
+        if (isCitizenViewer) {
+            // Citizen viewing their own request sent to an advocate
+            holder.tvCitizenName.setText(req.getLawyerName() != null ? req.getLawyerName() : "আইনজীবী");
+            holder.tvCitizenDistrict.setText("আইনজীবী পরামর্শ আবেদন");
+        } else {
+            // Lawyer viewing incoming request from a citizen
+            holder.tvCitizenName.setText(req.getCitizenName() != null ? req.getCitizenName() : "নাগরিক");
+            holder.tvCitizenDistrict.setText(!TextUtils.isEmpty(req.getCitizenDistrict())
+                    ? "📍 জেলা: " + req.getCitizenDistrict() : "সাধারণ নাগরিক");
+        }
 
         holder.tvCategoryBadge.setText(req.getCaseCategory() != null ? req.getCaseCategory() : "আইনি পরামর্শ");
         holder.tvCaseSummary.setText(req.getCaseSummary() != null ? req.getCaseSummary() : "");
 
-        if (!TextUtils.isEmpty(req.getCitizenPhone())) {
+        if (!TextUtils.isEmpty(req.getCitizenPhone()) && !isCitizenViewer) {
             holder.tvCitizenPhone.setVisibility(View.VISIBLE);
             holder.tvCitizenPhone.setText("📞 " + req.getCitizenPhone());
         } else {
@@ -79,28 +101,55 @@ public class ConsultationRequestAdapter extends RecyclerView.Adapter<Consultatio
         }
 
         boolean isPending = ConsultationRequest.STATUS_PENDING.equalsIgnoreCase(req.getStatus());
-        if (isPending) {
-            holder.layoutActionButtons.setVisibility(View.VISIBLE);
-            holder.tvRequestStatus.setVisibility(View.GONE);
+        boolean isAccepted = ConsultationRequest.STATUS_ACCEPTED.equalsIgnoreCase(req.getStatus());
+        boolean isDeclined = ConsultationRequest.STATUS_DECLINED.equalsIgnoreCase(req.getStatus());
 
-            holder.btnAccept.setOnClickListener(v -> {
-                if (listener != null) listener.onAccept(req);
-            });
-            holder.btnDecline.setOnClickListener(v -> {
-                if (listener != null) listener.onDecline(req);
-            });
-        } else {
+        if (isCitizenViewer) {
             holder.layoutActionButtons.setVisibility(View.GONE);
             holder.tvRequestStatus.setVisibility(View.VISIBLE);
-            if (ConsultationRequest.STATUS_ACCEPTED.equalsIgnoreCase(req.getStatus())) {
-                holder.tvRequestStatus.setText("✓ গৃহীত হয়েছে (চ্যাট চলছে)");
+
+            if (isPending) {
+                holder.tvRequestStatus.setText("🟡 অপেক্ষারত (আইনজীবীর সম্মতির অপেক্ষায়)");
                 holder.tvRequestStatus.setTextColor(context.getResources().getColor(R.color.mint_accent));
-            } else if (ConsultationRequest.STATUS_DECLINED.equalsIgnoreCase(req.getStatus())) {
-                holder.tvRequestStatus.setText("✕ প্রত্যাখ্যাত");
+            } else if (isAccepted) {
+                holder.tvRequestStatus.setText("🟢 গৃহীত হয়েছে! চ্যাট করতে এখানে ট্যাপ করুন 💬");
+                holder.tvRequestStatus.setTextColor(context.getResources().getColor(R.color.mint_accent));
+            } else if (isDeclined) {
+                holder.tvRequestStatus.setText("🔴 এই মুহূর্তে আইনজীবী অনুপলব্ধ");
                 holder.tvRequestStatus.setTextColor(context.getResources().getColor(R.color.text_secondary));
             } else {
                 holder.tvRequestStatus.setText("✓ পরামর্শ সমাপ্ত");
-                holder.tvRequestStatus.setTextColor(context.getResources().getColor(R.color.mint_accent));
+                holder.tvRequestStatus.setTextColor(context.getResources().getColor(R.color.text_secondary));
+            }
+
+            holder.itemView.setOnClickListener(v -> {
+                if (citizenListener != null) citizenListener.onRequestClick(req);
+            });
+        } else {
+            // Lawyer view
+            if (isPending) {
+                holder.layoutActionButtons.setVisibility(View.VISIBLE);
+                holder.tvRequestStatus.setVisibility(View.GONE);
+
+                holder.btnAccept.setOnClickListener(v -> {
+                    if (lawyerListener != null) lawyerListener.onAccept(req);
+                });
+                holder.btnDecline.setOnClickListener(v -> {
+                    if (lawyerListener != null) lawyerListener.onDecline(req);
+                });
+            } else {
+                holder.layoutActionButtons.setVisibility(View.GONE);
+                holder.tvRequestStatus.setVisibility(View.VISIBLE);
+                if (isAccepted) {
+                    holder.tvRequestStatus.setText("✓ গৃহীত হয়েছে (চ্যাট চলছে)");
+                    holder.tvRequestStatus.setTextColor(context.getResources().getColor(R.color.mint_accent));
+                } else if (isDeclined) {
+                    holder.tvRequestStatus.setText("✕ প্রত্যাখ্যাত");
+                    holder.tvRequestStatus.setTextColor(context.getResources().getColor(R.color.text_secondary));
+                } else {
+                    holder.tvRequestStatus.setText("✓ পরামর্শ সমাপ্ত");
+                    holder.tvRequestStatus.setTextColor(context.getResources().getColor(R.color.mint_accent));
+                }
             }
         }
     }
