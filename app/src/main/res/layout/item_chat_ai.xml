@@ -18,7 +18,7 @@
         android:textColor="@color/text_primary"
         android:textSize="15sp" />
 
-    <!-- AI Response Action Bar (Copy & Read Aloud Speaker) -->
+    <!-- AI Response Action Bar (Copy, Try Again circular arrow, Read Aloud Speaker) -->
     <LinearLayout
         android:id="@+id/layoutAiActions"
         android:layout_width="match_parent"
@@ -35,6 +35,17 @@
             android:contentDescription="অনুলিপি করুন"
             android:padding="6dp"
             android:src="@drawable/ic_copy"
+            app:tint="@color/text_secondary" />
+
+        <ImageButton
+            android:id="@+id/btnTryAgain"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="আবার চেষ্টা করুন"
+            android:padding="6dp"
+            android:src="@drawable/ic_refresh"
             app:tint="@color/text_secondary" />
 
         <View

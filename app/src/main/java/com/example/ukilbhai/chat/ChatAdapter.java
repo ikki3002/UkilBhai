@@ -24,6 +24,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public interface OnChatActionListener {
         void onReadAloud(int position, String text);
         void onCopy(int position, String text);
+        void onRegenerate(int position, ChatMessage message);
     }
 
     private static final int VIEW_TYPE_USER = 1;
@@ -99,18 +100,53 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 aiHolder.tvMessage.setTextColor(0xFFEF4444); // Error red
                 aiHolder.tvMessage.setText(message.getText());
                 if (aiHolder.layoutAiActions != null) {
-                    aiHolder.layoutAiActions.setVisibility(View.GONE);
+                    aiHolder.layoutAiActions.setVisibility(View.VISIBLE);
+                }
+                if (aiHolder.btnCopyAi != null) {
+                    aiHolder.btnCopyAi.setVisibility(View.GONE);
+                }
+                if (aiHolder.btnReadAloud != null) {
+                    aiHolder.btnReadAloud.setVisibility(View.GONE);
+                }
+                if (aiHolder.btnTryAgain != null) {
+                    aiHolder.btnTryAgain.setVisibility(View.VISIBLE);
+                    aiHolder.btnTryAgain.setColorFilter(0xFFEF4444);
+                    aiHolder.btnTryAgain.setOnClickListener(v -> {
+                        if (actionListener != null) {
+                            actionListener.onRegenerate(holder.getAdapterPosition(), message);
+                        }
+                    });
                 }
             } else {
                 aiHolder.tvMessage.setTextColor(primaryTextColor);
                 if (aiHolder.layoutAiActions != null) {
                     aiHolder.layoutAiActions.setVisibility(View.VISIBLE);
                 }
+                if (aiHolder.btnCopyAi != null) {
+                    aiHolder.btnCopyAi.setVisibility(View.VISIBLE);
+                    aiHolder.btnCopyAi.setColorFilter(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_secondary));
+                    aiHolder.btnCopyAi.setOnClickListener(v -> {
+                        if (actionListener != null) {
+                            actionListener.onCopy(holder.getAdapterPosition(), message.getText());
+                        }
+                    });
+                }
+                if (aiHolder.btnTryAgain != null) {
+                    aiHolder.btnTryAgain.setVisibility(View.VISIBLE);
+                    aiHolder.btnTryAgain.setColorFilter(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_secondary));
+                    aiHolder.btnTryAgain.setOnClickListener(v -> {
+                        if (actionListener != null) {
+                            actionListener.onRegenerate(holder.getAdapterPosition(), message);
+                        }
+                    });
+                }
+
                 // Render rich markdown (bold, lists, headings, and tables)
                 markwon.setMarkdown(aiHolder.tvMessage, message.getText());
 
                 boolean isSpeaking = (position == currentlySpeakingPosition);
                 if (aiHolder.btnReadAloud != null) {
+                    aiHolder.btnReadAloud.setVisibility(View.VISIBLE);
                     if (isSpeaking) {
                         aiHolder.btnReadAloud.setImageResource(R.drawable.ic_stop);
                         aiHolder.btnReadAloud.setColorFilter(ContextCompat.getColor(holder.itemView.getContext(), R.color.mint_accent));
@@ -124,14 +160,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     aiHolder.btnReadAloud.setOnClickListener(v -> {
                         if (actionListener != null) {
                             actionListener.onReadAloud(holder.getAdapterPosition(), message.getText());
-                        }
-                    });
-                }
-
-                if (aiHolder.btnCopyAi != null) {
-                    aiHolder.btnCopyAi.setOnClickListener(v -> {
-                        if (actionListener != null) {
-                            actionListener.onCopy(holder.getAdapterPosition(), message.getText());
                         }
                     });
                 }
@@ -157,6 +185,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         TextView tvMessage;
         View layoutAiActions;
         ImageButton btnCopyAi;
+        ImageButton btnTryAgain;
         ImageButton btnReadAloud;
 
         AiViewHolder(@NonNull View itemView) {
@@ -164,6 +193,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             tvMessage = itemView.findViewById(R.id.tvAiMessage);
             layoutAiActions = itemView.findViewById(R.id.layoutAiActions);
             btnCopyAi = itemView.findViewById(R.id.btnCopyAi);
+            btnTryAgain = itemView.findViewById(R.id.btnTryAgain);
             btnReadAloud = itemView.findViewById(R.id.btnReadAloud);
         }
     }

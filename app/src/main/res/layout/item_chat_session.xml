@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_search_pill"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:layout_marginBottom="6dp"
+    android:orientation="horizontal"
+    android:paddingHorizontal="10dp"
+    android:paddingVertical="10dp">
+
+    <!-- Chat / Topic Icon -->
+    <ImageView
+        android:id="@+id/ivSessionIcon"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_marginStart="2dp"
+        android:contentDescription="Chat session"
+        android:src="@drawable/ic_chat"
+        app:tint="@color/text_secondary" />
+
+    <!-- Session Title and Time Info -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="6dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvSessionTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            android:textStyle="normal"
+            tools:text="জিডি করার নিয়ম ও আইনি ধাপ" />
+
+        <TextView
+            android:id="@+id/tvSessionDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="10sp"
+            tools:text="আজ • ৫টি বার্তা" />
+    </LinearLayout>
+
+    <!-- Pin Session Button -->
+    <ImageButton
+        android:id="@+id/btnPinSession"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="পিন করুন"
+        android:padding="5dp"
+        android:src="@drawable/ic_pin"
+        app:tint="@color/text_secondary" />
+
+    <!-- Delete Session Button -->
+    <ImageButton
+        android:id="@+id/btnDeleteSession"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginStart="2dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="মুছে ফেলুন"
+        android:padding="5dp"
+        android:src="@drawable/ic_delete"
+        app:tint="@color/text_secondary" />
+</LinearLayout>

@@ -44,6 +44,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.ukilbhai.chat.AiLegalClient;
 import com.example.ukilbhai.chat.ChatAdapter;
 import com.example.ukilbhai.chat.ChatMessage;
+import com.example.ukilbhai.chat.ChatSession;
+import com.example.ukilbhai.chat.ChatSessionAdapter;
+import com.example.ukilbhai.chat.ChatSessionManager;
 import com.example.ukilbhai.receiver.AirplaneModeReceiver;
 import com.example.ukilbhai.receiver.NetworkConnectivityReceiver;
 import com.example.ukilbhai.util.LanguageHelper;
@@ -62,6 +65,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
     private ImageButton btnMenu;
+    private ImageButton btnTopNewChat;
     private ImageButton btnChatMore;
     private View btnDrawerSettings;
     private View btnNewChat;
@@ -71,6 +75,15 @@ public class ChatActivity extends AppCompatActivity {
     private TextView tvBtnNewChat;
     private TextView tvRecentLabel;
     private TextView tvDrawerSettings;
+
+    // Search and Sessions in Drawer
+    private EditText etSearchSessions;
+    private ImageButton btnClearSearch;
+    private TextView tvEmptySessions;
+    private RecyclerView rvChatSessions;
+    private ChatSessionAdapter sessionAdapter;
+    private ChatSessionManager sessionManager;
+    private ChatSession currentSession;
 
     private RecyclerView rvChatMessages;
     private EditText etUserPrompt;
@@ -123,17 +136,19 @@ public class ChatActivity extends AppCompatActivity {
         initTextToSpeech();
         setupSpeechRecognizer();
         setupRecyclerView();
+        setupSessionsDrawer();
         setupListeners();
         setupReceivers();
         updateLanguageUI();
 
-        // Welcome greeting message
-        addInitialWelcomeMessage();
+        // Restore active session or create initial session
+        restoreOrInitSession();
     }
 
     private void initViews() {
         drawerLayout = findViewById(R.id.drawerLayout);
         btnMenu = findViewById(R.id.btnMenu);
+        btnTopNewChat = findViewById(R.id.btnTopNewChat);
         btnChatMore = findViewById(R.id.btnChatMore);
         btnDrawerSettings = findViewById(R.id.btnDrawerSettings);
         btnNewChat = findViewById(R.id.btnNewChat);
@@ -144,6 +159,11 @@ public class ChatActivity extends AppCompatActivity {
         tvBtnNewChat = findViewById(R.id.tvBtnNewChat);
         tvRecentLabel = findViewById(R.id.tvRecentLabel);
         tvDrawerSettings = findViewById(R.id.tvDrawerSettings);
+
+        etSearchSessions = findViewById(R.id.etSearchSessions);
+        btnClearSearch = findViewById(R.id.btnClearSearch);
+        tvEmptySessions = findViewById(R.id.tvEmptySessions);
+        rvChatSessions = findViewById(R.id.rvChatSessions);
 
         rvChatMessages = findViewById(R.id.rvChatMessages);
         etUserPrompt = findViewById(R.id.etUserPrompt);
@@ -241,6 +261,11 @@ public class ChatActivity extends AppCompatActivity {
             public void onCopy(int position, String text) {
                 handleCopyAiText(text);
             }
+
+            @Override
+            public void onRegenerate(int position, ChatMessage message) {
+                handleRegenerateResponse(position);
+            }
         });
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
@@ -248,14 +273,167 @@ public class ChatActivity extends AppCompatActivity {
         rvChatMessages.setAdapter(chatAdapter);
     }
 
+    private void setupSessionsDrawer() {
+        sessionManager = new ChatSessionManager(this);
+        sessionAdapter = new ChatSessionAdapter();
+        rvChatSessions.setLayoutManager(new LinearLayoutManager(this));
+        rvChatSessions.setAdapter(sessionAdapter);
+
+        sessionAdapter.setOnSessionActionListener(new ChatSessionAdapter.OnSessionActionListener() {
+            @Override
+            public void onSessionSelected(ChatSession session) {
+                loadSession(session);
+                if (drawerLayout != null) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                }
+            }
+
+            @Override
+            public void onSessionPinToggle(ChatSession session) {
+                boolean isPinned = sessionManager.togglePin(session.getId());
+                refreshSessionsDrawer();
+                boolean isBn = LanguageHelper.isBengali(ChatActivity.this);
+                Toast.makeText(ChatActivity.this, isPinned
+                        ? (isBn ? "পরামর্শ পিন করা হয়েছে" : "Consultation pinned")
+                        : (isBn ? "পিন সরানো হয়েছে" : "Consultation unpinned"), Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onSessionDelete(ChatSession session) {
+                confirmDeleteSession(session);
+            }
+        });
+
+        // Search text watcher
+        etSearchSessions.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String query = s.toString();
+                btnClearSearch.setVisibility(TextUtils.isEmpty(query) ? View.GONE : View.VISIBLE);
+                filterSessions(query);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        btnClearSearch.setOnClickListener(v -> {
+            etSearchSessions.setText("");
+            filterSessions("");
+        });
+    }
+
+    private void restoreOrInitSession() {
+        String activeId = sessionManager.getActiveSessionId();
+        ChatSession existing = sessionManager.getSession(activeId);
+        if (existing != null && !existing.getMessages().isEmpty()) {
+            loadSession(existing);
+        } else {
+            // Check if there are any existing sessions
+            List<ChatSession> all = sessionManager.getAllSessions();
+            if (!all.isEmpty()) {
+                loadSession(all.get(0));
+            } else {
+                initFreshSession();
+            }
+        }
+        refreshSessionsDrawer();
+    }
+
+    private void initFreshSession() {
+        currentSession = new ChatSession();
+        boolean isBn = LanguageHelper.isBengali(this);
+        currentSession.setTitle(isBn ? "নতুন আইনি পরামর্শ" : "New Legal Inquiry");
+        sessionManager.setActiveSessionId(currentSession.getId());
+
+        messageList.clear();
+        addInitialWelcomeMessage();
+        currentSession.setMessages(messageList);
+        sessionManager.saveSession(currentSession);
+        chatAdapter.notifyDataSetChanged();
+    }
+
+    private void loadSession(ChatSession session) {
+        if (session == null) return;
+        if (tts != null && tts.isSpeaking()) {
+            tts.stop();
+        }
+        if (chatAdapter != null) {
+            chatAdapter.setCurrentlySpeakingPosition(-1);
+        }
+        currentSession = session;
+        sessionManager.setActiveSessionId(session.getId());
+        sessionAdapter.setActiveSessionId(session.getId());
+
+        messageList.clear();
+        messageList.addAll(session.getMessages());
+        if (messageList.isEmpty()) {
+            addInitialWelcomeMessage();
+        }
+        chatAdapter.notifyDataSetChanged();
+        if (!messageList.isEmpty()) {
+            rvChatMessages.scrollToPosition(messageList.size() - 1);
+        }
+    }
+
+    private void confirmDeleteSession(ChatSession session) {
+        boolean isBn = LanguageHelper.isBengali(this);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(isBn ? "পরামর্শ মুছুন" : "Delete Consultation")
+                .setMessage(isBn
+                        ? "আপনি কি নিশ্চিতভাবে এই আইনি পরামর্শের ইতিহাস মুছে ফেলতে চান?"
+                        : "Are you sure you want to delete this consultation history?")
+                .setPositiveButton(isBn ? "মুছে ফেলুন" : "Delete", (dialog, which) -> {
+                    String deletedId = session.getId();
+                    sessionManager.deleteSession(deletedId);
+                    refreshSessionsDrawer();
+                    if (currentSession != null && deletedId.equals(currentSession.getId())) {
+                        startNewChat();
+                    }
+                    Toast.makeText(this, isBn ? "পরামর্শ মুছে ফেলা হয়েছে" : "Consultation deleted", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton(isBn ? "বাতিল" : "Cancel", null)
+                .show();
+    }
+
+    private void filterSessions(String query) {
+        List<ChatSession> results = sessionManager.searchSessions(query);
+        sessionAdapter.updateSessions(results);
+        boolean hasResults = !results.isEmpty();
+        tvEmptySessions.setVisibility(hasResults ? View.GONE : View.VISIBLE);
+        if (!hasResults && !TextUtils.isEmpty(query)) {
+            boolean isBn = LanguageHelper.isBengali(this);
+            tvEmptySessions.setText(isBn ? "কোনো পরামর্শ পাওয়া যায়নি" : "No consultations found");
+        } else if (!hasResults) {
+            boolean isBn = LanguageHelper.isBengali(this);
+            tvEmptySessions.setText(isBn ? "কোনো সংরক্ষিত পরামর্শ নেই" : "No saved consultations");
+        }
+    }
+
+    private void refreshSessionsDrawer() {
+        String currentQuery = etSearchSessions != null ? etSearchSessions.getText().toString() : "";
+        filterSessions(currentQuery);
+        if (currentSession != null && sessionAdapter != null) {
+            sessionAdapter.setActiveSessionId(currentSession.getId());
+        }
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     private void setupListeners() {
         if (btnMenu != null) {
             btnMenu.setOnClickListener(v -> {
                 if (drawerLayout != null) {
+                    refreshSessionsDrawer();
                     drawerLayout.openDrawer(GravityCompat.START);
                 }
             });
+        }
+
+        if (btnTopNewChat != null) {
+            btnTopNewChat.setOnClickListener(v -> startNewChat());
         }
 
         if (btnChatMore != null) {
@@ -286,6 +464,7 @@ public class ChatActivity extends AppCompatActivity {
         applyPressScale(btnAddAttachment);
         applyPressScale(btnVoiceInput);
         applyPressScale(cardActionButton);
+        applyPressScale(btnTopNewChat);
 
         // Auto-expanding input: dynamic corner radius & toggle Send button
         etUserPrompt.addTextChangedListener(new TextWatcher() {
@@ -383,6 +562,9 @@ public class ChatActivity extends AppCompatActivity {
         if (tvChatTitle != null) {
             tvChatTitle.setText(isBn ? "উকিল ভাই" : "Ukil Bhai");
         }
+        if (btnTopNewChat != null) {
+            btnTopNewChat.setContentDescription(isBn ? "নতুন চ্যাট শুরু করুন" : "Start New Chat");
+        }
         if (etUserPrompt != null) {
             etUserPrompt.setHint(isBn ? "আইনি সমস্যা বা প্রশ্ন লিখুন..." : "Ask legal questions or advice...");
         }
@@ -395,8 +577,14 @@ public class ChatActivity extends AppCompatActivity {
         if (tvBtnNewChat != null) {
             tvBtnNewChat.setText(isBn ? "নতুন আইনি জিজ্ঞাসা" : "New Legal Inquiry");
         }
+        if (etSearchSessions != null) {
+            etSearchSessions.setHint(isBn ? "পরামর্শ খুঁজুন..." : "Search consultations...");
+        }
         if (tvRecentLabel != null) {
-            tvRecentLabel.setText(isBn ? "সাম্প্রতিক পরামর্শ" : "Recent Consultations");
+            tvRecentLabel.setText(isBn ? "সংরক্ষিত পরামর্শ" : "Saved Consultations");
+        }
+        if (tvEmptySessions != null) {
+            tvEmptySessions.setText(isBn ? "কোনো সংরক্ষিত পরামর্শ নেই" : "No saved consultations");
         }
         if (tvDrawerSettings != null) {
             tvDrawerSettings.setText(isBn ? "সেটিংস" : "Settings");
@@ -451,6 +639,90 @@ public class ChatActivity extends AppCompatActivity {
             boolean isBn = LanguageHelper.isBengali(this);
             Toast.makeText(this, isBn ? "অনুলিপি করা হয়েছে" : "Copied to clipboard", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void handleRegenerateResponse(int position) {
+        boolean isBn = LanguageHelper.isBengali(this);
+        if (isAirplaneModeOn) {
+            Toast.makeText(this, isBn
+                    ? "বিমান মোড চালু থাকায় বার্তা পাঠানো সম্ভব নয়।"
+                    : "Cannot retry while Airplane mode is on.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!isNetworkConnected) {
+            Toast.makeText(this, isBn
+                    ? "ইন্টারনেট সংযোগ নেই। অনুগ্রহ করে নেটওয়ার্ক চালু করুন।"
+                    : "No internet connection. Please check network.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (position < 0 || position >= messageList.size()) return;
+
+        // Stop active TTS
+        if (tts != null && tts.isSpeaking()) {
+            tts.stop();
+        }
+        if (chatAdapter != null) {
+            chatAdapter.setCurrentlySpeakingPosition(-1);
+        }
+
+        // Find the user prompt preceding this AI response
+        String userPrompt = null;
+        for (int i = position - 1; i >= 0; i--) {
+            if (messageList.get(i).getSender() == ChatMessage.SENDER_USER) {
+                userPrompt = messageList.get(i).getText();
+                break;
+            }
+        }
+
+        if (userPrompt == null) {
+            Toast.makeText(this, isBn ? "পুনরায় চেষ্টার জন্য কোনো প্রশ্ন পাওয়া যায়নি" : "No prompt found to retry", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Sublist of history up to the preceding user prompt for AI context
+        List<ChatMessage> subContext = new ArrayList<>();
+        for (int i = 0; i < position; i++) {
+            subContext.add(messageList.get(i));
+        }
+
+        setTyping(true);
+        final String promptToRetry = userPrompt;
+        final int targetPosition = position;
+
+        aiLegalClient.sendMessage(subContext, promptToRetry, new AiLegalClient.ResponseCallback() {
+            @Override
+            public void onSuccess(String reply, String providerUsed) {
+                setTyping(false);
+                if (targetPosition < messageList.size()) {
+                    ChatMessage msg = messageList.get(targetPosition);
+                    msg.setText(reply);
+                    msg.setError(false);
+                    chatAdapter.notifyItemChanged(targetPosition);
+
+                    if (currentSession != null) {
+                        currentSession.setMessages(messageList);
+                        sessionManager.saveSession(currentSession);
+                        refreshSessionsDrawer();
+                    }
+                }
+                Toast.makeText(ChatActivity.this, isBn ? "নতুন বিশ্লেষণ প্রস্তুত করা হয়েছে" : "Response regenerated", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                setTyping(false);
+                if (targetPosition < messageList.size()) {
+                    String errPrefix = isBn ? "ত্রুটি: " : "Error: ";
+                    ChatMessage msg = messageList.get(targetPosition);
+                    msg.setText(errPrefix + errorMessage);
+                    msg.setError(true);
+                    chatAdapter.notifyItemChanged(targetPosition);
+                }
+                Toast.makeText(ChatActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private String stripMarkdownForSpeech(String markdown) {
@@ -588,9 +860,16 @@ public class ChatActivity extends AppCompatActivity {
         if (chatAdapter != null) {
             chatAdapter.setCurrentlySpeakingPosition(-1);
         }
-        messageList.clear();
-        addInitialWelcomeMessage();
-        chatAdapter.notifyDataSetChanged();
+
+        // If current session already has messages, save it before starting new
+        if (currentSession != null && !messageList.isEmpty()) {
+            currentSession.setMessages(messageList);
+            sessionManager.saveSession(currentSession);
+        }
+
+        initFreshSession();
+        refreshSessionsDrawer();
+
         boolean isBn = LanguageHelper.isBengali(this);
         Toast.makeText(this, isBn ? "নতুন আইনি জিজ্ঞাসা শুরু হয়েছে" : "Started new legal inquiry", Toast.LENGTH_SHORT).show();
     }
@@ -715,7 +994,6 @@ public class ChatActivity extends AppCompatActivity {
                 ? "আসসালামু আলাইকুম! আমি 'উকিল ভাই' এআই। আপনার কি ধরনের আইনি পরামর্শ বা তথ্য প্রয়োজন? দয়া করে আপনার সমস্যাটি লিখুন।"
                 : "Hello! I am Ukil Bhai AI. What kind of legal advice or information do you need? Please describe your query.";
         messageList.add(new ChatMessage(welcome, ChatMessage.SENDER_AI));
-        chatAdapter.notifyItemInserted(messageList.size() - 1);
     }
 
     private void handleSendMessage() {
@@ -742,9 +1020,9 @@ public class ChatActivity extends AppCompatActivity {
         // Stop any active TTS when user sends a new message
         if (tts != null && tts.isSpeaking()) {
             tts.stop();
-            if (chatAdapter != null) {
-                chatAdapter.setCurrentlySpeakingPosition(-1);
-            }
+        }
+        if (chatAdapter != null) {
+            chatAdapter.setCurrentlySpeakingPosition(-1);
         }
 
         // Attach legal context if selected
@@ -755,8 +1033,32 @@ public class ChatActivity extends AppCompatActivity {
                     : "[Attachment/Legal Topic: " + currentAttachmentContext + "]\n" + prompt;
         }
 
+        // Ensure session exists
+        if (currentSession == null) {
+            currentSession = new ChatSession();
+            sessionManager.setActiveSessionId(currentSession.getId());
+        }
+
+        // Check if current session needs intelligent topic naming
+        boolean isFirstUserMessage = true;
+        for (ChatMessage msg : messageList) {
+            if (msg.getSender() == ChatMessage.SENDER_USER) {
+                isFirstUserMessage = false;
+                break;
+            }
+        }
+        if (isFirstUserMessage) {
+            String derivedTitle = ChatSession.deriveTitle(finalPrompt, isBn);
+            currentSession.setTitle(derivedTitle);
+        }
+
         // 1. Add user message
-        messageList.add(new ChatMessage(finalPrompt, ChatMessage.SENDER_USER));
+        ChatMessage userMsg = new ChatMessage(finalPrompt, ChatMessage.SENDER_USER);
+        messageList.add(userMsg);
+        currentSession.addMessage(userMsg);
+        sessionManager.saveSession(currentSession);
+        refreshSessionsDrawer();
+
         chatAdapter.notifyItemInserted(messageList.size() - 1);
         rvChatMessages.smoothScrollToPosition(messageList.size() - 1);
 
@@ -769,7 +1071,12 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String reply, String providerUsed) {
                 setTyping(false);
-                messageList.add(new ChatMessage(reply, ChatMessage.SENDER_AI));
+                ChatMessage aiMsg = new ChatMessage(reply, ChatMessage.SENDER_AI);
+                messageList.add(aiMsg);
+                currentSession.addMessage(aiMsg);
+                sessionManager.saveSession(currentSession);
+                refreshSessionsDrawer();
+
                 chatAdapter.notifyItemInserted(messageList.size() - 1);
                 rvChatMessages.smoothScrollToPosition(messageList.size() - 1);
             }
@@ -778,7 +1085,12 @@ public class ChatActivity extends AppCompatActivity {
             public void onError(String errorMessage) {
                 setTyping(false);
                 String errPrefix = isBn ? "ত্রুটি: " : "Error: ";
-                messageList.add(new ChatMessage(errPrefix + errorMessage, ChatMessage.SENDER_AI, true));
+                ChatMessage errorMsg = new ChatMessage(errPrefix + errorMessage, ChatMessage.SENDER_AI, true);
+                messageList.add(errorMsg);
+                currentSession.addMessage(errorMsg);
+                sessionManager.saveSession(currentSession);
+                refreshSessionsDrawer();
+
                 chatAdapter.notifyItemInserted(messageList.size() - 1);
                 rvChatMessages.smoothScrollToPosition(messageList.size() - 1);
                 Toast.makeText(ChatActivity.this, errorMessage, Toast.LENGTH_LONG).show();

@@ -50,6 +50,19 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
+            <!-- Start New Chat Button -->
+            <ImageButton
+                android:id="@+id/btnTopNewChat"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_centerVertical="true"
+                android:layout_toStartOf="@id/btnChatMore"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="New Chat"
+                android:padding="9dp"
+                android:src="@drawable/ic_edit_chat"
+                app:tint="@color/text_primary" />
+
             <!-- 3-dot Overflow Menu for Settings -->
             <ImageButton
                 android:id="@+id/btnChatMore"
@@ -312,7 +325,7 @@
     <!-- Left Sidebar (Drawer) Container -->
     <LinearLayout
         android:id="@+id/layoutSidebarDrawer"
-        android:layout_width="280dp"
+        android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:background="@color/surface_card"
@@ -353,83 +366,126 @@
             android:layout_height="1dp"
             android:background="@color/card_stroke" />
 
-        <!-- Drawer Content Area -->
-        <ScrollView
+        <!-- Drawer Action Controls (New Chat & Search) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="4dp">
+
+            <!-- New Chat / Start Chat Pill Button -->
+            <LinearLayout
+                android:id="@+id/btnNewChat"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_search_pill"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="14dp">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="New Chat Icon"
+                    android:src="@drawable/ic_add"
+                    app:tint="@color/mint_accent" />
+
+                <TextView
+                    android:id="@+id/tvBtnNewChat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="নতুন আইনি জিজ্ঞাসা"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Search Consultations Capsule -->
+            <LinearLayout
+                android:id="@+id/layoutDrawerSearch"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_search_pill"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="12dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:contentDescription="Search Icon"
+                    android:src="@drawable/ic_search"
+                    app:tint="@color/text_secondary" />
+
+                <EditText
+                    android:id="@+id/etSearchSessions"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:hint="পরামর্শ খুঁজুন..."
+                    android:imeOptions="actionSearch"
+                    android:importantForAutofill="no"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <ImageButton
+                    android:id="@+id/btnClearSearch"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Clear search"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_close"
+                    android:visibility="gone"
+                    app:tint="@color/text_secondary" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvRecentLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="4dp"
+                android:text="সংরক্ষিত পরামর্শ"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Empty State Label -->
+        <TextView
+            android:id="@+id/tvEmptySessions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:paddingHorizontal="20dp"
+            android:text="কোনো সংরক্ষিত পরামর্শ নেই"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <!-- Saved Sessions RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvChatSessions"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:padding="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <!-- New Chat Button -->
-                <LinearLayout
-                    android:id="@+id/btnNewChat"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_search_pill"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="14dp">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:contentDescription="New Chat Icon"
-                        android:src="@drawable/ic_add"
-                        app:tint="@color/mint_accent" />
-
-                    <TextView
-                        android:id="@+id/tvBtnNewChat"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:text="নতুন আইনি জিজ্ঞাসা"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/tvRecentLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:layout_marginBottom="8dp"
-                    android:text="সাম্প্রতিক পরামর্শ"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="• সাধারণ ডায়েরি (জিডি) নিয়মাবলী"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp"
-                    android:paddingVertical="8dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="• দেনমোহর ও পারিবারিক সুরক্ষা"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp"
-                    android:paddingVertical="8dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="• সড়ক পরিবহন আইন ও জরিমানা"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp"
-                    android:paddingVertical="8dp" />
-            </LinearLayout>
-        </ScrollView>
+            android:clipToPadding="false"
+            android:paddingHorizontal="14dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="12dp" />
 
         <View
             android:layout_width="match_parent"
