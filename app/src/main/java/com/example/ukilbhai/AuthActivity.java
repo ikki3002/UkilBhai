@@ -25,6 +25,7 @@ import java.util.List;
 import com.example.ukilbhai.model.UserProfile;
 import com.example.ukilbhai.model.LawyerProfile;
 import com.example.ukilbhai.lawyer.LawyerDashboardActivity;
+import com.example.ukilbhai.lawyer.LawyerLocalStore;
 import com.example.ukilbhai.util.LanguageHelper;
 import com.example.ukilbhai.util.ImageStorageHelper;
 import com.example.ukilbhai.util.ThemeHelper;
@@ -426,6 +427,10 @@ public class AuthActivity extends AppCompatActivity {
                                         if (roleTask.isSuccessful() && roleTask.getResult() != null && roleTask.getResult().exists()) {
                                             String storedRole = roleTask.getResult().getString("role");
                                             if (storedRole != null) role = storedRole;
+                                        } else {
+                                            if (LawyerLocalStore.isUserLawyer(AuthActivity.this, loggedUser.getUid())) {
+                                                role = UserProfile.ROLE_LAWYER;
+                                            }
                                         }
 
                                         getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE)
@@ -588,6 +593,7 @@ public class AuthActivity extends AppCompatActivity {
                                         System.currentTimeMillis()
                                 );
 
+                                LawyerLocalStore.saveLawyer(AuthActivity.this, lawyer);
                                 mFirestore.collection("lawyers")
                                         .document(user.getUid())
                                         .set(lawyer.toMap(), SetOptions.merge());

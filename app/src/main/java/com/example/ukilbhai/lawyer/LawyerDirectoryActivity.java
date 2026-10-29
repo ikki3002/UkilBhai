@@ -35,7 +35,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class LawyerDirectoryActivity extends AppCompatActivity {
 
@@ -150,111 +152,61 @@ public class LawyerDirectoryActivity extends AppCompatActivity {
     }
 
     private void loadLawyersFromFirestore() {
+        // 1. Instant local render (0 ms latency) from resilient cache
+        List<LawyerProfile> cached = LawyerLocalStore.getAllCachedLawyers(this);
+        if (!cached.isEmpty()) {
+            allLawyers.clear();
+            allLawyers.addAll(cached);
+            applyFilter();
+        }
+
         progressLawyers.setVisibility(View.VISIBLE);
 
         lawyersListener = mFirestore.collection("lawyers")
                 .addSnapshotListener((snapshots, error) -> {
                     progressLawyers.setVisibility(View.GONE);
-                    if (error != null || snapshots == null) return;
+                    if (error != null) {
+                        android.util.Log.e("LawyerDirectory", "Firestore snapshot error: " + error.getMessage(), error);
+                        // If error occurred (e.g. PERMISSION_DENIED / SERVICE_DISABLED / offline),
+                        // ensure we still have our rich cached and default verified lawyers!
+                        if (allLawyers.isEmpty()) {
+                            allLawyers.addAll(LawyerLocalStore.getAllCachedLawyers(LawyerDirectoryActivity.this));
+                            applyFilter();
+                        }
+                        return;
+                    }
+                    if (snapshots == null) return;
 
-                    allLawyers.clear();
-                    for (DocumentSnapshot doc : snapshots.getDocuments()) {
-                        LawyerProfile lawyer = doc.toObject(LawyerProfile.class);
-                        if (lawyer != null) {
-                            allLawyers.add(lawyer);
+                    // Merge remote Firestore lawyers with local cache so newly registered lawyers appear
+                    Map<String, LawyerProfile> lawyerMap = new LinkedHashMap<>();
+
+                    // Start with local store
+                    for (LawyerProfile lp : LawyerLocalStore.getAllCachedLawyers(LawyerDirectoryActivity.this)) {
+                        if (lp != null && lp.getUid() != null) {
+                            lawyerMap.put(lp.getUid(), lp);
                         }
                     }
 
-                    // If empty in database, insert demo verified lawyers so citizen always sees active lawyers
-                    if (allLawyers.isEmpty()) {
-                        populateDefaultVerifiedLawyers();
-                    } else {
-                        applyFilter();
+                    // Firestore updates take precedence
+                    for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                        LawyerProfile lawyer = doc.toObject(LawyerProfile.class);
+                        if (lawyer != null && !TextUtils.isEmpty(lawyer.getUid())) {
+                            lawyerMap.put(lawyer.getUid(), lawyer);
+                        }
                     }
+
+                    allLawyers.clear();
+                    allLawyers.addAll(lawyerMap.values());
+
+                    if (allLawyers.isEmpty()) {
+                        allLawyers.addAll(LawyerLocalStore.getDefaultVerifiedLawyers());
+                    }
+
+                    // Save merged set back to local store
+                    LawyerLocalStore.saveAllLawyers(LawyerDirectoryActivity.this, allLawyers);
+
+                    applyFilter();
                 });
-    }
-
-    private void populateDefaultVerifiedLawyers() {
-        List<LawyerProfile> defaults = new ArrayList<>();
-
-        List<String> tags1 = new ArrayList<>();
-        tags1.add("জমিজমা");
-        tags1.add("দেওয়ানি");
-        tags1.add("দলিল রেজিস্ট্রেশন");
-        LawyerProfile l1 = new LawyerProfile(
-                "demo_lawyer_1",
-                "অ্যাডভোকেট শরিফুল ইসলাম",
-                "shariful.advocate@gmail.com",
-                "01711223344",
-                "",
-                "ঢাকা",
-                "BC-1928/2016",
-                "ঢাকা আইনজীবী সমিতি",
-                "জেলা ও দায়রা জজ আদালত, ঢাকা",
-                "সিনিয়র অ্যাডভোকেট",
-                tags1,
-                "দেওয়ানি মামলা, জমিজমা বণ্টন ও নামজারি বিরোধে ৯ বছরের নির্ভরযোগ্য অভিজ্ঞতা।",
-                9,
-                500.0,
-                true,
-                true,
-                System.currentTimeMillis()
-        );
-        defaults.add(l1);
-
-        List<String> tags2 = new ArrayList<>();
-        tags2.add("পারিবারিক");
-        tags2.add("দেনমোহর");
-        tags2.add("অভিভাবকত্ব");
-        LawyerProfile l2 = new LawyerProfile(
-                "demo_lawyer_2",
-                "ব্যারিস্টার ফারহানা হক",
-                "farhana.haque.bar@gmail.com",
-                "01811334455",
-                "",
-                "চট্টগ্রাম",
-                "BC-2415/2019",
-                "চট্টগ্রাম জেলা আইনজীবী সমিতি",
-                "জেলা ও দায়রা জজ আদালত, চট্টগ্রাম",
-                "অ্যাডভোকেট, সুপ্রীম কোর্ট",
-                tags2,
-                "পারিবারিক আদালত, কাবিননামা, দেনমোহর ও শিশু হেফাজত মামলায় অভিজ্ঞ।",
-                6,
-                600.0,
-                true,
-                true,
-                System.currentTimeMillis()
-        );
-        defaults.add(l2);
-
-        List<String> tags3 = new ArrayList<>();
-        tags3.add("ফৌজদারি");
-        tags3.add("জামিন");
-        tags3.add("চেক ডিজঅনার");
-        LawyerProfile l3 = new LawyerProfile(
-                "demo_lawyer_3",
-                "অ্যাডভোকেট মাহবুবুর রহমান",
-                "mahbub.law@gmail.com",
-                "01911445566",
-                "",
-                "সিলেট",
-                "BC-1145/2014",
-                "সিলেট আইনজীবী সমিতি",
-                "জেলা ও দায়রা জজ আদালত, সিলেট",
-                "ফৌজদারি আইন বিশেষজ্ঞ",
-                tags3,
-                "থানা জিডি, এফআইআর, দায়রা আদালত জামিন ও এনআই অ্যাক্ট ১৩৮ ধারায় চেক মামলার অভিজ্ঞ পরামর্শক।",
-                11,
-                400.0,
-                false,
-                true,
-                System.currentTimeMillis()
-        );
-        defaults.add(l3);
-
-        for (LawyerProfile lp : defaults) {
-            mFirestore.collection("lawyers").document(lp.getUid()).set(lp.toMap());
-        }
     }
 
     private void applyFilter() {
