@@ -74,7 +74,7 @@ public class SettingsDialogHelper {
         int sectionCount = dbHelper.getSectionCount();
         int actCount = dbHelper.getActCount();
 
-        if (sectionCount == 0) sectionCount = 3508;
+        if (sectionCount == 0) sectionCount = 3518;
         if (actCount == 0) actCount = 38;
 
         tvRagEngineStatus.setText(isReady ? "ইঞ্জিন স্থিতি: প্রস্তুত ও ১০০% সক্রিয়" : "ইঞ্জিন স্থিতি: লোড হচ্ছে...");

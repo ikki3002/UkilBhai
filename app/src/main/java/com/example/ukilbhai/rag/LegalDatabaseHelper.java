@@ -28,7 +28,7 @@ public class LegalDatabaseHelper {
 
     private static final String TAG = "LegalDatabaseHelper";
     private static final String DB_NAME = "legal_acts.db";
-    private static final int CURRENT_DB_VERSION = 3; // Incremented for Legal Aid Handbook integration
+    private static final int CURRENT_DB_VERSION = 4; // Incremented for comprehensive NLASO Knowledge Base
     private static final String PREF_NAME = "legal_rag_prefs";
     private static final String KEY_DB_VERSION = "copied_db_version";
 
@@ -130,7 +130,8 @@ public class LegalDatabaseHelper {
     private String normalizeBengali(String text) {
         if (text == null) return "";
         String nfc = Normalizer.normalize(text, Normalizer.Form.NFC).toLowerCase();
-        return nfc.replace('ী', 'ি').replace('ূ', 'ু');
+        return nfc.replace('ী', 'ি').replace('ূ', 'ু')
+                .replace("ড়", "ড়").replace("ঢ়", "ঢ়").replace("য়", "য়");
     }
 
     /**

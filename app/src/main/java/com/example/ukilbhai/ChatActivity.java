@@ -1144,7 +1144,7 @@ public class ChatActivity extends AppCompatActivity {
 
         if (tvRagBadge != null) {
 
-            tvRagBadge.setText(isBn ? "⚖️ আইন ভাণ্ডার সক্রিয় (৩,৫০৮ ধারা)" : "⚖️ Law Database Active (3,508 Sec)");
+            tvRagBadge.setText(isBn ? "⚖️ আইন ভাণ্ডার সক্রিয় (৩,৫১৮ ধারা)" : "⚖️ Law Database Active (3,518 Sec)");
 
         }
 
