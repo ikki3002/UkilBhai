@@ -13,7 +13,7 @@ if (localPropertiesFile.exists()) {
 def geminiApiKey = localProperties.getProperty('GEMINI_API_KEY') ?: ""
 def groqApiKey = localProperties.getProperty('GROQ_API_KEY') ?: ""
 def hfApiKey = localProperties.getProperty('HUGGINGFACE_API_KEY') ?: ""
-def ragBackendUrl = localProperties.getProperty('RAG_BACKEND_URL') ?: ""
+
 
 android {
     namespace 'com.example.ukilbhai'
@@ -31,7 +31,7 @@ android {
         buildConfigField "String", "GEMINI_API_KEY", "\"${geminiApiKey}\""
         buildConfigField "String", "GROQ_API_KEY", "\"${groqApiKey}\""
         buildConfigField "String", "HUGGINGFACE_API_KEY", "\"${hfApiKey}\""
-        buildConfigField "String", "RAG_BACKEND_URL", "\"${ragBackendUrl}\""
+
     }
 
     buildFeatures {

@@ -18,9 +18,8 @@ local.properties
 *.bat
 *.ps1
 
-# Backend dataset & pycache
-backend/data/
-backend/**/__pycache__/
+# Temporary files
+scratch/
 *.pyc
 
 # Markdown files (except README)

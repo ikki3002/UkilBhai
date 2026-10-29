@@ -4,7 +4,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import android.content.Context;
 import com.example.ukilbhai.BuildConfig;
+import com.example.ukilbhai.UkilBhaiApp;
+import com.example.ukilbhai.rag.LegalDatabaseHelper;
+import com.example.ukilbhai.rag.LegalSection;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -69,33 +73,56 @@ public class AiLegalClient {
             String groqKey = BuildConfig.GROQ_API_KEY;
             String geminiKey = BuildConfig.GEMINI_API_KEY;
             String hfKey = BuildConfig.HUGGINGFACE_API_KEY;
-            String ragUrl = BuildConfig.RAG_BACKEND_URL;
+
 
             List<String> attemptedErrors = new ArrayList<>();
 
-            // 0. Try Legal RAG Backend first if configured (Hugging Face Space or local server)
-            if (ragUrl != null && !ragUrl.trim().isEmpty()) {
+            // 0. On-Device RAG: Search local SQLite FTS5 database (instant & offline)
+            List<LegalSection> retrievedSections = new ArrayList<>();
+            Context appContext = UkilBhaiApp.getAppContext();
+            if (appContext != null) {
                 try {
-                    Log.d(TAG, "Attempting Legal RAG backend: " + ragUrl);
-                    String reply = callRagBackend(ragUrl.trim(), history, userMessage);
-                    if (reply != null && !reply.trim().isEmpty()) {
-                        mainHandler.post(() -> callback.onSuccess(reply, "Ukil Bhai Legal RAG"));
-                        return;
-                    }
+                    retrievedSections = LegalDatabaseHelper.getInstance(appContext).searchStatutes(userMessage, 3);
+                    Log.i(TAG, "On-Device RAG retrieved " + retrievedSections.size() + " sections for: " + userMessage);
                 } catch (Exception e) {
-                    Log.w(TAG, "RAG backend failed, falling back to direct cloud models: " + e.getMessage());
-                    attemptedErrors.add("Legal RAG: " + e.getMessage());
+                    Log.w(TAG, "On-device statute retrieval error: " + e.getMessage());
                 }
             }
+
+            // Build augmented prompt with retrieved statutes
+            String augmentedMessage = userMessage;
+            if (!retrievedSections.isEmpty()) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("[বাংলাদেশ আইন ভাণ্ডার থেকে প্রাসঙ্গিক ধারাসমূহ (Statute Context)]:\n");
+                for (int i = 0; i < retrievedSections.size(); i++) {
+                    LegalSection s = retrievedSections.get(i);
+                    sb.append("--- ধারা ").append(i + 1).append(" ---\n");
+                    sb.append("আইন: ").append(s.getCitationHeader()).append("\n");
+                    if (!s.getSectionTitle().isEmpty()) {
+                        sb.append("শিরোনাম: ").append(s.getSectionTitle()).append("\n");
+                    }
+                    String preview = s.getSectionContent();
+                    if (preview.length() > 600) {
+                        preview = preview.substring(0, 600) + "...";
+                    }
+                    sb.append("মূল পাঠ:\n").append(preview).append("\n\n");
+                }
+                sb.append("[নাগরিকের আইনি প্রশ্ন]:\n").append(userMessage);
+                augmentedMessage = sb.toString();
+            }
+
+            final List<LegalSection> finalRetrieved = retrievedSections;
 
             // 1. Try Groq Cloud first (Known healthy & working on your account)
             if (groqKey != null && !groqKey.trim().isEmpty()) {
                 for (String model : GROQ_MODELS) {
                     try {
                         Log.d(TAG, "Attempting Groq Cloud model: " + model);
-                        String reply = callOpenAiCompatible(GROQ_API_URL, groqKey.trim(), model, history, userMessage);
+                        String reply = callOpenAiCompatible(GROQ_API_URL, groqKey.trim(), model, history, augmentedMessage);
                         if (reply != null && !reply.trim().isEmpty()) {
-                            mainHandler.post(() -> callback.onSuccess(reply, "Groq (" + model + ")"));
+                            String formatted = appendCitations(reply, finalRetrieved);
+                            String provider = finalRetrieved.isEmpty() ? "Groq (" + model + ")" : "Groq RAG (" + model + ")";
+                            mainHandler.post(() -> callback.onSuccess(formatted, provider));
                             return;
                         }
                     } catch (Exception e) {
@@ -110,9 +137,11 @@ public class AiLegalClient {
                 for (String model : GEMINI_MODELS) {
                     try {
                         Log.d(TAG, "Attempting Gemini model: " + model);
-                        String reply = callGeminiApi(geminiKey.trim(), model, history, userMessage);
+                        String reply = callGeminiApi(geminiKey.trim(), model, history, augmentedMessage);
                         if (reply != null && !reply.trim().isEmpty()) {
-                            mainHandler.post(() -> callback.onSuccess(reply, "Google " + model));
+                            String formatted = appendCitations(reply, finalRetrieved);
+                            String provider = finalRetrieved.isEmpty() ? "Google " + model : "Google RAG (" + model + ")";
+                            mainHandler.post(() -> callback.onSuccess(formatted, provider));
                             return;
                         }
                     } catch (Exception e) {
@@ -126,9 +155,11 @@ public class AiLegalClient {
             if (hfKey != null && !hfKey.trim().isEmpty()) {
                 try {
                     Log.d(TAG, "Attempting Hugging Face router...");
-                    String reply = callOpenAiCompatible(HF_ROUTER_URL, hfKey.trim(), HF_MODEL, history, userMessage);
+                    String reply = callOpenAiCompatible(HF_ROUTER_URL, hfKey.trim(), HF_MODEL, history, augmentedMessage);
                     if (reply != null && !reply.trim().isEmpty()) {
-                        mainHandler.post(() -> callback.onSuccess(reply, "Hugging Face"));
+                        String formatted = appendCitations(reply, finalRetrieved);
+                        String provider = finalRetrieved.isEmpty() ? "Hugging Face" : "Hugging Face RAG";
+                        mainHandler.post(() -> callback.onSuccess(formatted, provider));
                         return;
                     }
                 } catch (Exception e) {
@@ -299,74 +330,19 @@ public class AiLegalClient {
         throw new RuntimeException("HTTP " + statusCode + ": " + responseStr);
     }
 
-    private String callRagBackend(String baseUrl, List<ChatMessage> history, String userMessage) throws Exception {
-        String askEndpoint = baseUrl.endsWith("/ask") ? baseUrl : (baseUrl.endsWith("/") ? baseUrl + "ask" : baseUrl + "/ask");
-        URL url = new URL(askEndpoint);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-        conn.setConnectTimeout(15000);
-        conn.setReadTimeout(35000);
-        conn.setDoOutput(true);
-
-        JSONObject root = new JSONObject();
-        root.put("query", userMessage);
-        root.put("top_k", 4);
-
-        if (history != null && !history.isEmpty()) {
-            JSONArray histArray = new JSONArray();
-            int start = Math.max(0, history.size() - 6);
-            for (int i = start; i < history.size(); i++) {
-                ChatMessage m = history.get(i);
-                if (m.getText() == null || m.getText().trim().isEmpty()) continue;
-                JSONObject chatObj = new JSONObject();
-                chatObj.put("role", m.getSender() == ChatMessage.SENDER_USER ? "user" : "assistant");
-                chatObj.put("content", m.getText());
-                histArray.put(chatObj);
+    private String appendCitations(String reply, List<LegalSection> sections) {
+        if (sections == null || sections.isEmpty()) {
+            return reply;
+        }
+        StringBuilder sb = new StringBuilder(reply);
+        sb.append("\n\n---\n**উদ্ধৃত আইন ও ধারাসমূহ (BLAD):**\n");
+        for (LegalSection s : sections) {
+            sb.append("• 📜 **").append(s.getCitationHeader()).append("**");
+            if (!s.getSectionTitle().isEmpty()) {
+                sb.append(" — *").append(s.getSectionTitle()).append("*");
             }
-            root.put("history", histArray);
+            sb.append("\n");
         }
-
-        byte[] input = root.toString().getBytes(StandardCharsets.UTF_8);
-        try (OutputStream os = conn.getOutputStream()) {
-            os.write(input, 0, input.length);
-        }
-
-        int statusCode = conn.getResponseCode();
-        InputStream stream = (statusCode >= 200 && statusCode < 300) ? conn.getInputStream() : conn.getErrorStream();
-        StringBuilder responseStr = new StringBuilder();
-        if (stream != null) {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    responseStr.append(line);
-                }
-            }
-        }
-
-        if (statusCode >= 200 && statusCode < 300) {
-            JSONObject resJson = new JSONObject(responseStr.toString());
-            String answer = resJson.optString("answer", "");
-            JSONArray citations = resJson.optJSONArray("citations");
-            if (citations != null && citations.length() > 0) {
-                StringBuilder sb = new StringBuilder(answer);
-                sb.append("\n\n---\n**উদ্ধৃত আইন ও ধারাসমূহ (BLAD):**\n");
-                for (int i = 0; i < citations.length(); i++) {
-                    JSONObject c = citations.getJSONObject(i);
-                    String act = c.optString("act_title", "");
-                    String year = c.optString("act_year", "");
-                    String sec = c.optString("section_title", "");
-                    sb.append("• 📜 **").append(act).append(year.isEmpty() ? "" : " (" + year + ")").append("**");
-                    if (!sec.isEmpty()) {
-                        sb.append(" — *").append(sec).append("*");
-                    }
-                    sb.append("\n");
-                }
-                return sb.toString();
-            }
-            return answer;
-        }
-
-        throw new RuntimeException("RAG HTTP " + statusCode + ": " + responseStr);
+        return sb.toString();
     }
 }

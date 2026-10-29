@@ -9,11 +9,21 @@ import com.google.firebase.FirebaseOptions;
 public class UkilBhaiApp extends Application {
 
     private static final String TAG = "UkilBhaiApp";
+    private static UkilBhaiApp instance;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        instance = this;
         ensureFirebaseInitialized();
+    }
+
+    public static UkilBhaiApp getInstance() {
+        return instance;
+    }
+
+    public static android.content.Context getAppContext() {
+        return instance != null ? instance.getApplicationContext() : null;
     }
 
     private void ensureFirebaseInitialized() {
