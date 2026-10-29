@@ -120,9 +120,9 @@ public class AiLegalClient {
                         Log.d(TAG, "Attempting Groq Cloud model: " + model);
                         String reply = callOpenAiCompatible(GROQ_API_URL, groqKey.trim(), model, history, augmentedMessage);
                         if (reply != null && !reply.trim().isEmpty()) {
-                            String formatted = appendCitations(reply, finalRetrieved);
-                            String provider = finalRetrieved.isEmpty() ? "Groq (" + model + ")" : "Groq RAG (" + model + ")";
-                            mainHandler.post(() -> callback.onSuccess(formatted, provider));
+                            String apiLabel = finalRetrieved.isEmpty() ? "Groq API (" + model + ")" : "Groq API (" + model + ") • বাংলাদেশ আইন ভাণ্ডার RAG";
+                            String formatted = formatResponseWithCitationsAndSignature(reply, finalRetrieved, apiLabel);
+                            mainHandler.post(() -> callback.onSuccess(formatted, apiLabel));
                             return;
                         }
                     } catch (Exception e) {
@@ -139,9 +139,9 @@ public class AiLegalClient {
                         Log.d(TAG, "Attempting Gemini model: " + model);
                         String reply = callGeminiApi(geminiKey.trim(), model, history, augmentedMessage);
                         if (reply != null && !reply.trim().isEmpty()) {
-                            String formatted = appendCitations(reply, finalRetrieved);
-                            String provider = finalRetrieved.isEmpty() ? "Google " + model : "Google RAG (" + model + ")";
-                            mainHandler.post(() -> callback.onSuccess(formatted, provider));
+                            String apiLabel = finalRetrieved.isEmpty() ? "Google Gemini API (" + model + ")" : "Google Gemini API (" + model + ") • বাংলাদেশ আইন ভাণ্ডার RAG";
+                            String formatted = formatResponseWithCitationsAndSignature(reply, finalRetrieved, apiLabel);
+                            mainHandler.post(() -> callback.onSuccess(formatted, apiLabel));
                             return;
                         }
                     } catch (Exception e) {
@@ -157,9 +157,9 @@ public class AiLegalClient {
                     Log.d(TAG, "Attempting Hugging Face router...");
                     String reply = callOpenAiCompatible(HF_ROUTER_URL, hfKey.trim(), HF_MODEL, history, augmentedMessage);
                     if (reply != null && !reply.trim().isEmpty()) {
-                        String formatted = appendCitations(reply, finalRetrieved);
-                        String provider = finalRetrieved.isEmpty() ? "Hugging Face" : "Hugging Face RAG";
-                        mainHandler.post(() -> callback.onSuccess(formatted, provider));
+                        String apiLabel = finalRetrieved.isEmpty() ? "Hugging Face API (" + HF_MODEL + ")" : "Hugging Face API (" + HF_MODEL + ") • বাংলাদেশ আইন ভাণ্ডার RAG";
+                        String formatted = formatResponseWithCitationsAndSignature(reply, finalRetrieved, apiLabel);
+                        mainHandler.post(() -> callback.onSuccess(formatted, apiLabel));
                         return;
                     }
                 } catch (Exception e) {
@@ -330,19 +330,19 @@ public class AiLegalClient {
         throw new RuntimeException("HTTP " + statusCode + ": " + responseStr);
     }
 
-    private String appendCitations(String reply, List<LegalSection> sections) {
-        if (sections == null || sections.isEmpty()) {
-            return reply;
-        }
-        StringBuilder sb = new StringBuilder(reply);
-        sb.append("\n\n---\n**উদ্ধৃত আইন ও ধারাসমূহ (BLAD):**\n");
-        for (LegalSection s : sections) {
-            sb.append("• 📜 **").append(s.getCitationHeader()).append("**");
-            if (!s.getSectionTitle().isEmpty()) {
-                sb.append(" — *").append(s.getSectionTitle()).append("*");
+        private String formatResponseWithCitationsAndSignature(String reply, List<LegalSection> sections, String apiProviderLabel) {
+        StringBuilder sb = new StringBuilder(reply != null ? reply.trim() : "");
+        if (sections != null && !sections.isEmpty()) {
+            sb.append("\n\n---\n**উদ্ধৃত আইন ও ধারাসমূহ (BLAD):**\n");
+            for (LegalSection s : sections) {
+                sb.append("• 📜 **").append(s.getCitationHeader()).append("**");
+                if (!s.getSectionTitle().isEmpty()) {
+                    sb.append(" — *").append(s.getSectionTitle()).append("*");
+                }
+                sb.append("\n");
             }
-            sb.append("\n");
         }
+        sb.append("\n\n---\n*— উকিল ভাই (চালিত: ").append(apiProviderLabel).append(")*");
         return sb.toString();
     }
 }
