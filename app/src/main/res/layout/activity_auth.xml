@@ -268,6 +268,108 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
+                <!-- Role Selection Segment: Citizen vs Lawyer -->
+                <TextView
+                    android:id="@+id/tvRoleSelectPrompt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="আপনার ভূমিকা নির্বাচন করুন:"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:orientation="horizontal">
+
+                    <!-- Role 1: Citizen -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardRoleCitizen"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="@color/surface_card"
+                        app:cardCornerRadius="14dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/mint_accent"
+                        app:strokeWidth="2dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="6dp">
+
+                            <TextView
+                                android:id="@+id/tvRoleCitizenTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="👤 সাধারণ নাগরিক"
+                                android:textColor="@color/mint_accent"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvRoleCitizenSub"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="আইনি সাহায্য ও পরামর্শ"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="10sp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Role 2: Lawyer -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardRoleLawyer"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="@color/surface_card"
+                        app:cardCornerRadius="14dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/card_stroke"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="6dp">
+
+                            <TextView
+                                android:id="@+id/tvRoleLawyerTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="⚖️ আইনজীবী (Advocate)"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvRoleLawyerSub"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="ক্লায়েন্ট পরামর্শ ও প্র্যাকটিস"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="10sp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                </LinearLayout>
+
                 <!-- Profile Photo Picker Frame -->
                 <RelativeLayout
                     android:layout_width="wrap_content"
@@ -412,6 +514,14 @@
                 </LinearLayout>
 
                 <!-- Optional Legal Profile Subheader -->
+                <!-- CITIZEN FIELDS CONTAINER -->
+                <LinearLayout
+                    android:id="@+id/layoutCitizenFields"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="visible">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -654,6 +764,220 @@
                         android:textColorHint="@color/text_secondary"
                         android:textSize="14sp" />
                 </LinearLayout>
+
+                </LinearLayout> <!-- End layoutCitizenFields -->
+
+                <!-- LAWYER SPECIFIC SECTION (Visible only if Lawyer role selected) -->
+                <LinearLayout
+                    android:id="@+id/layoutLawyerFields"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/tvLawyerHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:text="⚖️ আইনজীবী পরিচয় ও চেম্বার তথ্য"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <!-- Bar Council Sanad Number -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginBottom="12dp"
+                        android:background="@drawable/bg_input_pill"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_badge"
+                            app:tint="@color/text_secondary" />
+
+                        <EditText
+                            android:id="@+id/etLawyerBarNo"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="বার কাউন্সিল সনদ নং (যেমন: BC-1234/2018)"
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- Bar Association & Court -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginBottom="12dp"
+                        android:background="@drawable/bg_input_pill"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_location"
+                            app:tint="@color/text_secondary" />
+
+                        <EditText
+                            android:id="@+id/etLawyerBarAssociation"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="বার সমিতি (যেমন: ঢাকা বার / সুপ্রীম কোর্ট)"
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- Practice District -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginBottom="12dp"
+                        android:background="@drawable/bg_input_pill"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_location"
+                            app:tint="@color/text_secondary" />
+
+                        <EditText
+                            android:id="@+id/etLawyerDistrict"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="প্র্যাকটিস জেলা (যেমন: ঢাকা)"
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- Practice Areas / Specialties (Tags) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginBottom="12dp"
+                        android:background="@drawable/bg_input_pill"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_edit_chat"
+                            app:tint="@color/text_secondary" />
+
+                        <EditText
+                            android:id="@+id/etLawyerTags"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="ট্যাগ (যেমন: জমিজমা, পারিবারিক, চেক)"
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- Experience Years & Consultation Fee Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal">
+
+                        <!-- Experience -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="50dp"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_input_pill"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingHorizontal="14dp">
+
+                            <EditText
+                                android:id="@+id/etLawyerExperience"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@null"
+                                android:hint="অভিজ্ঞতা (বছর)"
+                                android:inputType="number"
+                                android:textColor="@color/text_primary"
+                                android:textColorHint="@color/text_secondary"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+
+                        <!-- Fee -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="50dp"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_input_pill"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingHorizontal="14dp">
+
+                            <EditText
+                                android:id="@+id/etLawyerFee"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@null"
+                                android:hint="পরামর্শ ফি (৳)"
+                                android:inputType="number"
+                                android:textColor="@color/text_primary"
+                                android:textColorHint="@color/text_secondary"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Bio / History -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:background="@drawable/bg_input_pill"
+                        android:gravity="top"
+                        android:orientation="horizontal"
+                        android:padding="14dp">
+
+                        <EditText
+                            android:id="@+id/etLawyerBio"
+                            android:layout_width="match_parent"
+                            android:layout_height="72dp"
+                            android:background="@null"
+                            android:gravity="top|start"
+                            android:hint="চেম্বারের বিবরণ ও আইনি প্র্যাকটিসের ইতিহাস"
+                            android:inputType="textMultiLine"
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_secondary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </LinearLayout> <!-- End layoutLawyerFields -->
 
                 <!-- Complete Registration Button -->
                 <com.google.android.material.button.MaterialButton

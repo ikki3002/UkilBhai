@@ -285,6 +285,91 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- 3.5 Find Your Lawyer Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardFindLawyer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:clickable="true"
+                android:focusable="true"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/mint_accent"
+                app:strokeWidth="1.5dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
+                            android:text="⚖️ আইনজীবী খুঁজুন ও পরামর্শ নিন"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:background="@drawable/bg_pill_emergency_green"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="2dp"
+                            android:text="🟢 লাইভ"
+                            android:textColor="@color/mint_accent"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </RelativeLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="আপনার জেলায় জমিজমা, পারিবারিক, দেনমোহর বা ফৌজদারি মামলার অভিজ্ঞ আইনজীবীর সাথে সরাসরি ১-অন-১ পরামর্শ করুন।"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="বার কাউন্সিল সনদী আইনজীবী"
+                            android:textColor="@color/mint_accent"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnBrowseLawyers"
+                            android:layout_width="wrap_content"
+                            android:layout_height="38dp"
+                            android:backgroundTint="@color/primary_emerald"
+                            android:text="আইনজীবী তালিকা ➔"
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            app:cornerRadius="19dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- 4. Section Title -->
             <TextView
                 android:layout_width="wrap_content"

@@ -70,6 +70,13 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences prefs = getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE);
         boolean isGuestMode = prefs.getBoolean("is_guest_mode", false);
+        String userRole = prefs.getString("user_role", UserProfile.ROLE_CITIZEN);
+
+        if (UserProfile.ROLE_LAWYER.equalsIgnoreCase(userRole)) {
+            startActivity(new Intent(this, com.example.ukilbhai.lawyer.LawyerDashboardActivity.class));
+            finish();
+            return;
+        }
 
         if ((mAuth == null || mAuth.getCurrentUser() == null) && !isGuestMode) {
             redirectToAuth();
@@ -98,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
         setupEmergencyButtons();
         setupAiChatButton();
         updateGuestBanner();
+        setupFindLawyerAction();
     }
 
     @Override
@@ -610,6 +618,19 @@ public class MainActivity extends AppCompatActivity {
             applyPressScale(btnLegalAid16699);
             btnLegalAid16699.setOnClickListener(v -> dialPhoneNumber("16699"));
         }
+    }
+
+    private void setupFindLawyerAction() {
+        View cardFindLawyer = findViewById(R.id.cardFindLawyer);
+        View btnBrowseLawyers = findViewById(R.id.btnBrowseLawyers);
+
+        View.OnClickListener listener = v -> {
+            Intent intent = new Intent(MainActivity.this, com.example.ukilbhai.lawyer.LawyerDirectoryActivity.class);
+            startActivity(intent);
+        };
+
+        if (cardFindLawyer != null) cardFindLawyer.setOnClickListener(listener);
+        if (btnBrowseLawyers != null) btnBrowseLawyers.setOnClickListener(listener);
     }
 
     private void setupAiChatButton() {

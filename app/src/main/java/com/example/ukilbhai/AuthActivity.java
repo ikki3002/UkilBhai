@@ -19,7 +19,12 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.example.ukilbhai.model.UserProfile;
+import com.example.ukilbhai.model.LawyerProfile;
+import com.example.ukilbhai.lawyer.LawyerDashboardActivity;
 import com.example.ukilbhai.util.LanguageHelper;
 import com.example.ukilbhai.util.ImageStorageHelper;
 import com.example.ukilbhai.util.ThemeHelper;
@@ -84,6 +89,26 @@ public class AuthActivity extends AppCompatActivity {
     private TextView tvOrLabel;
     private MaterialButton btnGuestSignIn;
 
+    // Role Selection
+    private MaterialCardView cardRoleCitizen;
+    private MaterialCardView cardRoleLawyer;
+    private TextView tvRoleCitizenTitle;
+    private TextView tvRoleCitizenSub;
+    private TextView tvRoleLawyerTitle;
+    private TextView tvRoleLawyerSub;
+    private LinearLayout layoutCitizenFields;
+    private LinearLayout layoutLawyerFields;
+
+    // Lawyer Specific Inputs
+    private EditText etLawyerBarNo;
+    private EditText etLawyerBarAssociation;
+    private EditText etLawyerDistrict;
+    private EditText etLawyerTags;
+    private EditText etLawyerExperience;
+    private EditText etLawyerFee;
+    private EditText etLawyerBio;
+
+    private String selectedRole = UserProfile.ROLE_CITIZEN;
     private boolean isLoginTab = true;
 
     @Override
@@ -109,7 +134,7 @@ public class AuthActivity extends AppCompatActivity {
         android.content.SharedPreferences prefs = getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE);
         boolean isGuestMode = prefs.getBoolean("is_guest_mode", false);
         if (isGuestMode || (mAuth != null && mAuth.getCurrentUser() != null)) {
-            navigateToMain();
+            navigateToRoleDestination();
             return;
         }
 
@@ -192,6 +217,61 @@ public class AuthActivity extends AppCompatActivity {
 
         tvOrLabel = findViewById(R.id.tvOrLabel);
         btnGuestSignIn = findViewById(R.id.btnGuestSignIn);
+
+        // Role Selection views
+        cardRoleCitizen = findViewById(R.id.cardRoleCitizen);
+        cardRoleLawyer = findViewById(R.id.cardRoleLawyer);
+        tvRoleCitizenTitle = findViewById(R.id.tvRoleCitizenTitle);
+        tvRoleCitizenSub = findViewById(R.id.tvRoleCitizenSub);
+        tvRoleLawyerTitle = findViewById(R.id.tvRoleLawyerTitle);
+        tvRoleLawyerSub = findViewById(R.id.tvRoleLawyerSub);
+        layoutCitizenFields = findViewById(R.id.layoutCitizenFields);
+        layoutLawyerFields = findViewById(R.id.layoutLawyerFields);
+
+        // Lawyer specific inputs
+        etLawyerBarNo = findViewById(R.id.etLawyerBarNo);
+        etLawyerBarAssociation = findViewById(R.id.etLawyerBarAssociation);
+        etLawyerDistrict = findViewById(R.id.etLawyerDistrict);
+        etLawyerTags = findViewById(R.id.etLawyerTags);
+        etLawyerExperience = findViewById(R.id.etLawyerExperience);
+        etLawyerFee = findViewById(R.id.etLawyerFee);
+        etLawyerBio = findViewById(R.id.etLawyerBio);
+
+        setupRoleSwitching();
+    }
+
+    private void setupRoleSwitching() {
+        if (cardRoleCitizen != null && cardRoleLawyer != null) {
+            cardRoleCitizen.setOnClickListener(v -> selectRole(UserProfile.ROLE_CITIZEN));
+            cardRoleLawyer.setOnClickListener(v -> selectRole(UserProfile.ROLE_LAWYER));
+        }
+    }
+
+    private void selectRole(String role) {
+        selectedRole = role;
+        if (UserProfile.ROLE_LAWYER.equals(role)) {
+            cardRoleLawyer.setStrokeColor(getResources().getColor(R.color.mint_accent));
+            cardRoleLawyer.setStrokeWidth(4);
+            tvRoleLawyerTitle.setTextColor(getResources().getColor(R.color.mint_accent));
+
+            cardRoleCitizen.setStrokeColor(getResources().getColor(R.color.card_stroke));
+            cardRoleCitizen.setStrokeWidth(2);
+            tvRoleCitizenTitle.setTextColor(getResources().getColor(R.color.text_primary));
+
+            if (layoutLawyerFields != null) layoutLawyerFields.setVisibility(View.VISIBLE);
+            if (layoutCitizenFields != null) layoutCitizenFields.setVisibility(View.GONE);
+        } else {
+            cardRoleCitizen.setStrokeColor(getResources().getColor(R.color.mint_accent));
+            cardRoleCitizen.setStrokeWidth(4);
+            tvRoleCitizenTitle.setTextColor(getResources().getColor(R.color.mint_accent));
+
+            cardRoleLawyer.setStrokeColor(getResources().getColor(R.color.card_stroke));
+            cardRoleLawyer.setStrokeWidth(2);
+            tvRoleLawyerTitle.setTextColor(getResources().getColor(R.color.text_primary));
+
+            if (layoutCitizenFields != null) layoutCitizenFields.setVisibility(View.VISIBLE);
+            if (layoutLawyerFields != null) layoutLawyerFields.setVisibility(View.GONE);
+        }
     }
 
     private void setupPhotoPicker() {
@@ -338,14 +418,30 @@ public class AuthActivity extends AppCompatActivity {
                 .addOnCompleteListener(this, task -> {
                     setLoading(false);
                     if (task.isSuccessful()) {
-                        getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE)
-                                .edit()
-                                .putBoolean("is_guest_mode", false)
-                                .apply();
-                        Toast.makeText(AuthActivity.this,
-                                isBn ? "সফলভাবে লগইন হয়েছে" : "Logged in successfully",
-                                Toast.LENGTH_SHORT).show();
-                        navigateToMain();
+                        FirebaseUser loggedUser = mAuth.getCurrentUser();
+                        if (loggedUser != null) {
+                            mFirestore.collection("users").document(loggedUser.getUid()).get()
+                                    .addOnCompleteListener(roleTask -> {
+                                        String role = UserProfile.ROLE_CITIZEN;
+                                        if (roleTask.isSuccessful() && roleTask.getResult() != null && roleTask.getResult().exists()) {
+                                            String storedRole = roleTask.getResult().getString("role");
+                                            if (storedRole != null) role = storedRole;
+                                        }
+
+                                        getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE)
+                                                .edit()
+                                                .putBoolean("is_guest_mode", false)
+                                                .putString("user_role", role)
+                                                .apply();
+
+                                        Toast.makeText(AuthActivity.this,
+                                                isBn ? "সফলভাবে লগইন হয়েছে" : "Logged in successfully",
+                                                Toast.LENGTH_SHORT).show();
+                                        navigateToRoleDestination();
+                                    });
+                        } else {
+                            navigateToRoleDestination();
+                        }
                     } else {
                         handleAuthError(task.getException(), isBn ? "লগইন" : "Login");
                     }
@@ -358,8 +454,21 @@ public class AuthActivity extends AppCompatActivity {
         String email = etRegisterEmail.getText().toString().trim();
         String password = etRegisterPassword.getText().toString().trim();
 
+        // Lawyer Specific
+        String barNo = etLawyerBarNo != null ? etLawyerBarNo.getText().toString().trim() : "";
+        String barAssociation = etLawyerBarAssociation != null ? etLawyerBarAssociation.getText().toString().trim() : "";
+        String lawyerDistrict = etLawyerDistrict != null ? etLawyerDistrict.getText().toString().trim() : "";
+        String tagsInput = etLawyerTags != null ? etLawyerTags.getText().toString().trim() : "";
+        String expInput = etLawyerExperience != null ? etLawyerExperience.getText().toString().trim() : "0";
+        String feeInput = etLawyerFee != null ? etLawyerFee.getText().toString().trim() : "0";
+        String bio = etLawyerBio != null ? etLawyerBio.getText().toString().trim() : "";
+
         String nid = etRegisterNid.getText().toString().trim();
-        String district = etRegisterDistrict != null ? etRegisterDistrict.getText().toString().trim() : "";
+        String tempDistrict = etRegisterDistrict != null ? etRegisterDistrict.getText().toString().trim() : "";
+        if (UserProfile.ROLE_LAWYER.equals(selectedRole) && !TextUtils.isEmpty(lawyerDistrict)) {
+            tempDistrict = lawyerDistrict;
+        }
+        final String district = tempDistrict;
         String thana = etRegisterThana != null ? etRegisterThana.getText().toString().trim() : "";
         String unionWard = etRegisterUnion != null ? etRegisterUnion.getText().toString().trim() : "";
         String postOffice = etRegisterPost != null ? etRegisterPost.getText().toString().trim() : "";
@@ -382,6 +491,17 @@ public class AuthActivity extends AppCompatActivity {
             etRegisterPassword.setError(isBn ? "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে" : "Password must be at least 6 characters");
             etRegisterPassword.requestFocus();
             return;
+        }
+
+        if (UserProfile.ROLE_LAWYER.equals(selectedRole)) {
+            if (TextUtils.isEmpty(barNo)) {
+                if (etLawyerBarNo != null) etLawyerBarNo.setError(isBn ? "বার কাউন্সিল সনদ নং দিন" : "Enter Bar Council Sanad No");
+                return;
+            }
+            if (TextUtils.isEmpty(barAssociation)) {
+                if (etLawyerBarAssociation != null) etLawyerBarAssociation.setError(isBn ? "বার সমিতি ও আদালতের নাম দিন" : "Enter Bar Association");
+                return;
+            }
         }
 
         setLoading(true);
@@ -411,12 +531,14 @@ public class AuthActivity extends AppCompatActivity {
                                     postOffice,
                                     villageRoad,
                                     System.currentTimeMillis(),
-                                    false
+                                    false,
+                                    selectedRole
                             );
 
                             getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE)
                                     .edit()
                                     .putBoolean("is_guest_mode", false)
+                                    .putString("user_role", selectedRole)
                                     .putString("profile_name", name)
                                     .putString("profile_nid", nid)
                                     .putString("profile_district", district)
@@ -431,17 +553,54 @@ public class AuthActivity extends AppCompatActivity {
 
                             mFirestore.collection("users")
                                     .document(user.getUid())
-                                    .set(profile.toMap(), SetOptions.merge())
-                                    .addOnCompleteListener(storeTask -> {
-                                        setLoading(false);
-                                        Toast.makeText(AuthActivity.this,
-                                                isBn ? "নিবন্ধন সম্পন্ন হয়েছে!" : "Registration completed!",
-                                                Toast.LENGTH_SHORT).show();
-                                        navigateToMain();
-                                    });
+                                    .set(profile.toMap(), SetOptions.merge());
+
+                            if (UserProfile.ROLE_LAWYER.equals(selectedRole)) {
+                                List<String> tagsList = new ArrayList<>();
+                                if (!TextUtils.isEmpty(tagsInput)) {
+                                    for (String t : tagsInput.split("[,|、]")) {
+                                        String clean = t.trim();
+                                        if (!clean.isEmpty()) tagsList.add(clean);
+                                    }
+                                }
+                                int expYears = 0;
+                                try { expYears = Integer.parseInt(expInput); } catch (Exception ignored) {}
+                                double fee = 0.0;
+                                try { fee = Double.parseDouble(feeInput); } catch (Exception ignored) {}
+
+                                LawyerProfile lawyer = new LawyerProfile(
+                                        user.getUid(),
+                                        name,
+                                        email,
+                                        "",
+                                        photoUrl,
+                                        district,
+                                        barNo,
+                                        barAssociation,
+                                        barAssociation,
+                                        "অ্যাডভোকেট",
+                                        tagsList,
+                                        bio,
+                                        expYears,
+                                        fee,
+                                        true,
+                                        true,
+                                        System.currentTimeMillis()
+                                );
+
+                                mFirestore.collection("lawyers")
+                                        .document(user.getUid())
+                                        .set(lawyer.toMap(), SetOptions.merge());
+                            }
+
+                            setLoading(false);
+                            Toast.makeText(AuthActivity.this,
+                                    isBn ? "নিবন্ধন সম্পন্ন হয়েছে!" : "Registration completed!",
+                                    Toast.LENGTH_SHORT).show();
+                            navigateToRoleDestination();
                         } else {
                             setLoading(false);
-                            navigateToMain();
+                            navigateToRoleDestination();
                         }
                     } else {
                         setLoading(false);
@@ -482,7 +641,7 @@ public class AuthActivity extends AppCompatActivity {
                         Toast.makeText(AuthActivity.this,
                                 isBn ? "গেস্ট হিসেবে প্রবেশ করেছেন" : "Entered as Guest",
                                 Toast.LENGTH_SHORT).show();
-                        navigateToMain();
+                        navigateToRoleDestination();
                     } else {
                         // If Firebase Anonymous is disabled or configuration missing, allow local guest access
                         enterGuestOfflineMode();
@@ -501,7 +660,7 @@ public class AuthActivity extends AppCompatActivity {
         Toast.makeText(AuthActivity.this,
                 isBn ? "গেস্ট হিসেবে প্রবেশ করেছেন" : "Entered as Guest",
                 Toast.LENGTH_SHORT).show();
-        navigateToMain();
+        navigateToRoleDestination();
     }
 
     private void handleAuthError(Exception e, String actionName) {
@@ -581,8 +740,16 @@ public class AuthActivity extends AppCompatActivity {
         btnGuestSignIn.setEnabled(!loading);
     }
 
-    private void navigateToMain() {
-        Intent intent = new Intent(AuthActivity.this, MainActivity.class);
+    private void navigateToRoleDestination() {
+        android.content.SharedPreferences prefs = getSharedPreferences("ukilbhai_local_session", MODE_PRIVATE);
+        String role = prefs.getString("user_role", UserProfile.ROLE_CITIZEN);
+
+        Intent intent;
+        if (UserProfile.ROLE_LAWYER.equalsIgnoreCase(role)) {
+            intent = new Intent(AuthActivity.this, LawyerDashboardActivity.class);
+        } else {
+            intent = new Intent(AuthActivity.this, MainActivity.class);
+        }
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);

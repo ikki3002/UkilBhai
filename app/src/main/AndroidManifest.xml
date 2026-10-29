@@ -39,6 +39,22 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Lawyer Module Activities -->
+        <activity
+            android:name=".lawyer.LawyerDashboardActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".lawyer.LawyerDirectoryActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".lawyer.DirectChatActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
     </application>
 
 </manifest>

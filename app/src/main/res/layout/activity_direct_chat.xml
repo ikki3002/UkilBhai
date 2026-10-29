@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark"
+    android:orientation="vertical">
+
+    <!-- WhatsApp Style Top Bar -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@color/surface_card"
+        android:elevation="4dp"
+        android:paddingHorizontal="8dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:padding="8dp"
+            android:src="@drawable/ic_back"
+            app:tint="@color/text_primary" />
+
+        <RelativeLayout
+            android:id="@+id/layoutAvatarContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@id/btnBack"
+            android:layout_marginStart="4dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardUserAvatar"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/card_stroke"
+                app:strokeWidth="1dp">
+
+                <ImageView
+                    android:id="@+id/ivUserAvatar"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_avatar" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Green Online Dot -->
+            <View
+                android:id="@+id/viewOnlineIndicator"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_alignEnd="@id/cardUserAvatar"
+                android:layout_alignBottom="@id/cardUserAvatar"
+                android:background="@drawable/bg_online_dot"
+                android:visibility="gone" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="12dp"
+            android:layout_toEndOf="@id/layoutAvatarContainer"
+            android:layout_toStartOf="@id/btnEndConsultation"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvChatName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvChatStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="অফলাইন"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnEndConsultation"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:text="সমাপ্ত"
+            android:textColor="@color/mint_accent"
+            android:textSize="12sp" />
+    </RelativeLayout>
+
+    <!-- Consultation Topic Pill Banner -->
+    <TextView
+        android:id="@+id/tvCaseCategoryBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginVertical="8dp"
+        android:background="@drawable/bg_pill_emergency_green"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="4dp"
+        android:text="আইনি পরামর্শ"
+        android:textColor="@color/mint_accent"
+        android:textSize="11sp"
+        android:textStyle="bold" />
+
+    <!-- Chat Messages RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvDirectMessages"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingVertical="8dp" />
+
+    <!-- WhatsApp Style Message Input Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface_card"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="8dp">
+
+        <ImageButton
+            android:id="@+id/btnAttach"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Attach document or image"
+            android:padding="9dp"
+            android:src="@drawable/ic_camera"
+            app:tint="@color/text_secondary" />
+
+        <EditText
+            android:id="@+id/etMessageInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_input_pill"
+            android:hint="বার্তা লিখুন..."
+            android:maxLines="4"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="10dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:textSize="14sp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btnSend"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardBackgroundColor="@color/primary_emerald"
+            app:cardCornerRadius="22dp"
+            app:cardElevation="2dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_send"
+                app:tint="@color/white" />
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</LinearLayout>

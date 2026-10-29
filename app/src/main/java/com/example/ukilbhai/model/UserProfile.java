@@ -13,11 +13,19 @@ import java.util.Map;
  */
 public class UserProfile implements Serializable {
 
+    public static final String ROLE_CITIZEN = "citizen";
+    public static final String ROLE_LAWYER = "lawyer";
+
     private String uid;
     private String name;
     private String email;
     private String nid;
     private String photoUrl;
+
+    // Role differentiation
+    private String role = ROLE_CITIZEN;
+    private boolean isOnline = false;
+    private long lastSeen = 0L;
 
     // Structured Bangladesh Legal Address
     private String district;      // জেলা (e.g. ঢাকা)
@@ -40,6 +48,12 @@ public class UserProfile implements Serializable {
     public UserProfile(String uid, String name, String email, String nid, String photoUrl,
                        String district, String thana, String unionWard, String postOffice, String villageRoad,
                        long createdAt, boolean isGuest) {
+        this(uid, name, email, nid, photoUrl, district, thana, unionWard, postOffice, villageRoad, createdAt, isGuest, ROLE_CITIZEN);
+    }
+
+    public UserProfile(String uid, String name, String email, String nid, String photoUrl,
+                       String district, String thana, String unionWard, String postOffice, String villageRoad,
+                       long createdAt, boolean isGuest, String role) {
         this.uid = uid;
         this.name = name;
         this.email = email;
@@ -52,6 +66,7 @@ public class UserProfile implements Serializable {
         this.villageRoad = villageRoad;
         this.createdAt = createdAt;
         this.isGuest = isGuest;
+        this.role = (role != null && !role.isEmpty()) ? role : ROLE_CITIZEN;
 
         // Auto-populate legacy fields
         this.location = (!TextUtils.isEmpty(district) ? district : "") + (!TextUtils.isEmpty(thana) ? ", " + thana : "");
@@ -96,6 +111,34 @@ public class UserProfile implements Serializable {
 
     public void setPhotoUrl(String photoUrl) {
         this.photoUrl = photoUrl;
+    }
+
+    public String getRole() {
+        return role != null ? role : ROLE_CITIZEN;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public boolean isLawyer() {
+        return ROLE_LAWYER.equalsIgnoreCase(role);
+    }
+
+    public boolean isOnline() {
+        return isOnline;
+    }
+
+    public void setOnline(boolean online) {
+        isOnline = online;
+    }
+
+    public long getLastSeen() {
+        return lastSeen;
+    }
+
+    public void setLastSeen(long lastSeen) {
+        this.lastSeen = lastSeen;
     }
 
     public String getDistrict() {
@@ -196,6 +239,9 @@ public class UserProfile implements Serializable {
         map.put("email", email != null ? email : "");
         map.put("nid", nid != null ? nid : "");
         map.put("photoUrl", photoUrl != null ? photoUrl : "");
+        map.put("role", getRole());
+        map.put("isOnline", isOnline);
+        map.put("lastSeen", lastSeen);
         map.put("district", district != null ? district : "");
         map.put("thana", thana != null ? thana : "");
         map.put("unionWard", unionWard != null ? unionWard : "");
