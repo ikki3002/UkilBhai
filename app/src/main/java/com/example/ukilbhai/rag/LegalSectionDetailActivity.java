@@ -49,6 +49,7 @@ public class LegalSectionDetailActivity extends AppCompatActivity {
 
     private void initViews() {
         ImageButton btnBack = findViewById(R.id.btnBack);
+        ImageButton btnBookmark = findViewById(R.id.btnBookmarkSection);
         ImageButton btnCopy = findViewById(R.id.btnCopySection);
         ImageButton btnShare = findViewById(R.id.btnShareSection);
 
@@ -72,6 +73,17 @@ public class LegalSectionDetailActivity extends AppCompatActivity {
 
         tvDetailContent.setText(section.getSectionContent());
 
+        if (btnBookmark != null) {
+            updateBookmarkIcon(btnBookmark, BookmarkManager.isBookmarked(this, section));
+            btnBookmark.setOnClickListener(v -> {
+                boolean nowBookmarked = BookmarkManager.toggleBookmark(this, section);
+                updateBookmarkIcon(btnBookmark, nowBookmarked);
+                Toast.makeText(this,
+                        nowBookmarked ? "ধারাটি সংরক্ষিত তালিকায় যুক্ত হয়েছে 🔖" : "সংরক্ষিত তালিকা থেকে সরানো হয়েছে",
+                        Toast.LENGTH_SHORT).show();
+            });
+        }
+
         btnBack.setOnClickListener(v -> finish());
 
         btnCopy.setOnClickListener(v -> copyToClipboard());
@@ -90,8 +102,14 @@ public class LegalSectionDetailActivity extends AppCompatActivity {
 
         btnConsultLawyer.setOnClickListener(v -> {
             Intent lawyerIntent = new Intent(this, LawyerDirectoryActivity.class);
+            String handoffBrief = "আইনি ধারা সংক্রান্ত পরামর্শ: " + section.getCleanActTitle() + " (" + section.getDisplayTitle() + ")";
+            lawyerIntent.putExtra(LawyerDirectoryActivity.EXTRA_CASE_SUMMARY, handoffBrief);
             startActivity(lawyerIntent);
         });
+    }
+
+    private void updateBookmarkIcon(ImageButton btnBookmark, boolean isBookmarked) {
+        btnBookmark.setImageResource(isBookmarked ? R.drawable.ic_bookmark_filled : R.drawable.ic_bookmark);
     }
 
     private void copyToClipboard() {

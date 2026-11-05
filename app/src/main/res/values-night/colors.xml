@@ -6,6 +6,24 @@
     <color name="card_stroke">#272C2A</color>
     <color name="card_stroke_glow">#334D3F</color>
 
+    <!-- Emerald / Neon Mint Brand Accents (Dark Mode) -->
+    <color name="primary_emerald">#169A50</color>
+    <color name="mint_accent">#55D396</color>
+    <color name="mint_accent_alpha">#1A55D396</color>
+    <color name="glow_emerald">#169A50</color>
+
+    <!-- Emergency & Legal Aid Dark Mode Pills -->
+    <color name="emergency_red_bg">#1F1113</color>
+    <color name="emergency_red_stroke">#EF4444</color>
+    <color name="emergency_red_text">#F87171</color>
+
+    <color name="warning_amber">#FBBF24</color>
+    <color name="warning_amber_bg">#231B0A</color>
+
+    <color name="legal_aid_bg">#091A12</color>
+    <color name="legal_aid_stroke">#169A50</color>
+
+    <!-- Gemini Capsule Input Palette (Dark Mode) -->
     <color name="gemini_dock_bg">#1E1F20</color>
     <color name="gemini_dock_stroke">#37393B</color>
     <color name="gemini_live_pill_bg">#253556</color>
@@ -13,7 +31,7 @@
     <color name="gemini_icon_tint">#C4C7C5</color>
     <color name="gemini_mic_pulse">#FF5E7E</color>
 
-    <!-- User Chat Bubble (Gemini Light-Dark Theme) -->
+    <!-- User Chat Bubble (Gemini Dark Theme) -->
     <color name="chat_bubble_user_bg">#282A2C</color>
 
     <color name="text_primary">#FFFFFF</color>

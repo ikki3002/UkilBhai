@@ -225,7 +225,7 @@ public class DirectChatActivity extends AppCompatActivity {
     }
 
     private void sendAttachmentMessage(Uri uri) {
-        String localPath = ImageStorageHelper.saveImageToInternalStorage(this, uri);
+        String localPath = ImageStorageHelper.saveChatAttachment(this, uri);
         String finalPath = localPath != null ? localPath : uri.toString();
         sendMessage("[আইনি নথি/ছবি সংযুক্ত করা হয়েছে]", finalPath, "image");
     }

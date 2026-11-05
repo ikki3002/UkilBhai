@@ -119,6 +119,48 @@
                     android:checked="true"
                     app:useMaterialThemeColors="false" />
             </RelativeLayout>
+
+            <!-- Advocate Quick Legal Research Tools -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAdvocateStatuteExplorer"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:strokeColor="@color/card_stroke"
+                    android:text="📚 আইন ডিরেক্টরি"
+                    android:textColor="@color/mint_accent"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="18dp"
+                    app:strokeWidth="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAdvocateAiAssistant"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:strokeColor="@color/card_stroke"
+                    android:text="🤖 এআই গবেষণা"
+                    android:textColor="@color/mint_accent"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="18dp"
+                    app:strokeWidth="1dp" />
+            </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 

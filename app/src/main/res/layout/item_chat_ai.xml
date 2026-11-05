@@ -18,7 +18,7 @@
         android:textColor="@color/text_primary"
         android:textSize="15sp" />
 
-    <!-- AI Response Action Bar (Copy, Try Again circular arrow, Read Aloud Speaker) -->
+    <!-- AI Response Action Bar (Copy, Try Again, Consult Lawyer Handoff, Read Aloud Speaker) -->
     <LinearLayout
         android:id="@+id/layoutAiActions"
         android:layout_width="match_parent"
@@ -47,6 +47,21 @@
             android:padding="6dp"
             android:src="@drawable/ic_refresh"
             app:tint="@color/text_secondary" />
+
+        <TextView
+            android:id="@+id/btnConsultLawyerAi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_pill_emergency_green"
+            android:clickable="true"
+            android:focusable="true"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:text="⚖️ আইনজীবী পরামর্শ"
+            android:textColor="@color/mint_accent"
+            android:textSize="11sp"
+            android:textStyle="bold" />
 
         <View
             android:layout_width="0dp"

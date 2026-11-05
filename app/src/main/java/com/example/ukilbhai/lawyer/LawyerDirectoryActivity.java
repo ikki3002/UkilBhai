@@ -83,6 +83,9 @@ import java.util.Map;
 
 public class LawyerDirectoryActivity extends AppCompatActivity {
 
+    public static final String EXTRA_CASE_SUMMARY = "extra_case_summary";
+    private String prefilledCaseSummary = null;
+
 
 
     private ImageButton btnBack;
@@ -189,6 +192,12 @@ public class LawyerDirectoryActivity extends AppCompatActivity {
 
 
 
+        if (getIntent() != null && getIntent().hasExtra(EXTRA_CASE_SUMMARY)) {
+            prefilledCaseSummary = getIntent().getStringExtra(EXTRA_CASE_SUMMARY);
+            if (!TextUtils.isEmpty(prefilledCaseSummary)) {
+                Toast.makeText(this, "আপনার আইনি সমস্যার বিবরণ সংযুক্ত হয়েছে। যেকোনো আইনজীবীর 'আবেদন করুন' বাটনে চাপুন।", Toast.LENGTH_LONG).show();
+            }
+        }
         initViews();
 
         setupFilters();
@@ -570,6 +579,11 @@ public class LawyerDirectoryActivity extends AppCompatActivity {
                 android.R.layout.simple_spinner_dropdown_item, CATEGORIES);
 
         spinnerCategory.setAdapter(catAdapter);
+
+        if (!TextUtils.isEmpty(prefilledCaseSummary) && etCaseSummary != null) {
+            etCaseSummary.setText(prefilledCaseSummary);
+            etCaseSummary.setSelection(prefilledCaseSummary.length());
+        }
 
 
 

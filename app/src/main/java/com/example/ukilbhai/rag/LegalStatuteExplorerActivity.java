@@ -36,6 +36,7 @@ import java.util.concurrent.Executors;
 public class LegalStatuteExplorerActivity extends AppCompatActivity {
 
     public static final String EXTRA_INITIAL_CATEGORY = "extra_initial_category";
+    public static final String EXTRA_INITIAL_QUERY = "extra_initial_query";
 
     private String currentCategory = "all";
     private String currentQuery = "";
@@ -77,12 +78,30 @@ public class LegalStatuteExplorerActivity extends AppCompatActivity {
             currentCategory = initialCat.trim().toLowerCase();
         }
 
+        String initialQuery = getIntent().getStringExtra(EXTRA_INITIAL_QUERY);
+        if (initialQuery != null && !initialQuery.trim().isEmpty()) {
+            currentQuery = initialQuery.trim();
+        }
+
         initViews();
         setupCategoryChips();
         setupSearchInput();
         setupRecyclerView();
 
-        loadStatutes();
+        if (!currentQuery.isEmpty() && etSearchStatutes != null) {
+            etSearchStatutes.setText(currentQuery);
+            etSearchStatutes.setSelection(currentQuery.length());
+        } else {
+            loadStatutes();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if ("bookmarked".equalsIgnoreCase(currentCategory)) {
+            loadStatutes();
+        }
     }
 
     private void initViews() {
@@ -116,6 +135,7 @@ public class LegalStatuteExplorerActivity extends AppCompatActivity {
 
     private void setupCategoryChips() {
         categoryButtons.put("all", findViewById(R.id.chipAll));
+        categoryButtons.put("bookmarked", findViewById(R.id.chipBookmarked));
         categoryButtons.put("traffic", findViewById(R.id.chipTraffic));
         categoryButtons.put("family", findViewById(R.id.chipFamily));
         categoryButtons.put("tenant", findViewById(R.id.chipTenant));
@@ -205,7 +225,25 @@ public class LegalStatuteExplorerActivity extends AppCompatActivity {
         final String category = currentCategory;
 
         backgroundExecutor.execute(() -> {
-            List<LegalSection> results = dbHelper.searchStatuteExplorer(query, category, 250);
+            final List<LegalSection> results;
+            if ("bookmarked".equalsIgnoreCase(category)) {
+                List<LegalSection> saved = BookmarkManager.getBookmarkedSections(LegalStatuteExplorerActivity.this);
+                if (query.isEmpty()) {
+                    results = saved;
+                } else {
+                    results = new ArrayList<>();
+                    String lowerQ = query.toLowerCase();
+                    for (LegalSection s : saved) {
+                        if (s.getCleanActTitle().toLowerCase().contains(lowerQ)
+                                || s.getDisplayTitle().toLowerCase().contains(lowerQ)
+                                || s.getSectionContent().toLowerCase().contains(lowerQ)) {
+                            results.add(s);
+                        }
+                    }
+                }
+            } else {
+                results = dbHelper.searchStatuteExplorer(query, category, 250);
+            }
 
             mainHandler.post(() -> {
                 progressBar.setVisibility(View.GONE);

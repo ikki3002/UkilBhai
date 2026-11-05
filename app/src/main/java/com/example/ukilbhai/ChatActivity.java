@@ -553,6 +553,28 @@ public class ChatActivity extends AppCompatActivity {
 
             }
 
+            @Override
+            public void onConsultLawyer(int position, ChatMessage message) {
+                String userIssue = "";
+                for (int i = position - 1; i >= 0; i--) {
+                    if (i < messageList.size() && messageList.get(i).getSender() == ChatMessage.SENDER_USER) {
+                        userIssue = messageList.get(i).getText();
+                        break;
+                    }
+                }
+                String aiSummary = message != null && message.getText() != null ? message.getText() : "";
+                if (aiSummary.length() > 280) {
+                    aiSummary = aiSummary.substring(0, 280) + "...";
+                }
+                String caseBrief = !userIssue.isEmpty()
+                        ? "নাগরিকের সমস্যা: " + userIssue + "\n\nএআই প্রাথমিক বিশ্লেষণ: " + aiSummary
+                        : aiSummary;
+
+                Intent intent = new Intent(ChatActivity.this, com.example.ukilbhai.lawyer.LawyerDirectoryActivity.class);
+                intent.putExtra(com.example.ukilbhai.lawyer.LawyerDirectoryActivity.EXTRA_CASE_SUMMARY, caseBrief);
+                startActivity(intent);
+            }
+
         });
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);

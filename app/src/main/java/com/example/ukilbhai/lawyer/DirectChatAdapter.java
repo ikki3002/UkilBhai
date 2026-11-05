@@ -76,16 +76,15 @@ public class DirectChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             out.tvMessageTime.setText(timeStr);
 
             if (!TextUtils.isEmpty(msg.getAttachmentUrl()) && !"none".equals(msg.getAttachmentType())) {
-                out.ivAttachment.setVisibility(View.VISIBLE);
-                ImageStorageHelper.loadAvatar(context, out.ivAttachment, msg.getAttachmentUrl());
+                ImageStorageHelper.loadChatImage(context, out.ivAttachment, msg.getAttachmentUrl());
             } else {
                 out.ivAttachment.setVisibility(View.GONE);
             }
 
             if (msg.isRead()) {
-                out.ivMessageStatus.setImageResource(R.drawable.ic_pin_filled);
+                out.ivMessageStatus.setImageResource(R.drawable.ic_check_double);
             } else {
-                out.ivMessageStatus.setImageResource(R.drawable.ic_pin);
+                out.ivMessageStatus.setImageResource(R.drawable.ic_check_single);
             }
         } else if (holder instanceof InMessageViewHolder) {
             InMessageViewHolder in = (InMessageViewHolder) holder;
@@ -93,8 +92,7 @@ public class DirectChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             in.tvMessageTime.setText(timeStr);
 
             if (!TextUtils.isEmpty(msg.getAttachmentUrl()) && !"none".equals(msg.getAttachmentType())) {
-                in.ivAttachment.setVisibility(View.VISIBLE);
-                ImageStorageHelper.loadAvatar(context, in.ivAttachment, msg.getAttachmentUrl());
+                ImageStorageHelper.loadChatImage(context, in.ivAttachment, msg.getAttachmentUrl());
             } else {
                 in.ivAttachment.setVisibility(View.GONE);
             }

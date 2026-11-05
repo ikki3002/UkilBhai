@@ -154,6 +154,22 @@
                 app:cornerRadius="18dp" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/chipBookmarked"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginHorizontal="4dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingHorizontal="12dp"
+                android:strokeColor="@color/card_stroke"
+                android:text="🔖 সংরক্ষিত"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                app:cornerRadius="18dp"
+                app:strokeWidth="1dp" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/chipTraffic"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"

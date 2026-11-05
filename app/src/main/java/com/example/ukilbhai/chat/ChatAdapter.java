@@ -25,6 +25,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         void onReadAloud(int position, String text);
         void onCopy(int position, String text);
         void onRegenerate(int position, ChatMessage message);
+        default void onConsultLawyer(int position, ChatMessage message) {}
     }
 
     private static final int VIEW_TYPE_USER = 1;
@@ -108,6 +109,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 if (aiHolder.btnReadAloud != null) {
                     aiHolder.btnReadAloud.setVisibility(View.GONE);
                 }
+                if (aiHolder.btnConsultLawyerAi != null) {
+                    aiHolder.btnConsultLawyerAi.setVisibility(View.GONE);
+                }
                 if (aiHolder.btnTryAgain != null) {
                     aiHolder.btnTryAgain.setVisibility(View.VISIBLE);
                     aiHolder.btnTryAgain.setColorFilter(0xFFEF4444);
@@ -137,6 +141,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     aiHolder.btnTryAgain.setOnClickListener(v -> {
                         if (actionListener != null) {
                             actionListener.onRegenerate(holder.getAdapterPosition(), message);
+                        }
+                    });
+                }
+                if (aiHolder.btnConsultLawyerAi != null) {
+                    aiHolder.btnConsultLawyerAi.setVisibility(View.VISIBLE);
+                    aiHolder.btnConsultLawyerAi.setOnClickListener(v -> {
+                        if (actionListener != null) {
+                            actionListener.onConsultLawyer(holder.getAdapterPosition(), message);
                         }
                     });
                 }
@@ -186,6 +198,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         View layoutAiActions;
         ImageButton btnCopyAi;
         ImageButton btnTryAgain;
+        TextView btnConsultLawyerAi;
         ImageButton btnReadAloud;
 
         AiViewHolder(@NonNull View itemView) {
@@ -194,6 +207,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             layoutAiActions = itemView.findViewById(R.id.layoutAiActions);
             btnCopyAi = itemView.findViewById(R.id.btnCopyAi);
             btnTryAgain = itemView.findViewById(R.id.btnTryAgain);
+            btnConsultLawyerAi = itemView.findViewById(R.id.btnConsultLawyerAi);
             btnReadAloud = itemView.findViewById(R.id.btnReadAloud);
         }
     }

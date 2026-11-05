@@ -573,200 +573,112 @@
 
 
             <!-- 3.5 Find Your Lawyer Card -->
-
             <com.google.android.material.card.MaterialCardView
-
                 android:id="@+id/cardFindLawyer"
-
                 android:layout_width="match_parent"
-
                 android:layout_height="wrap_content"
-
                 android:layout_marginBottom="24dp"
-
                 android:clickable="true"
-
                 android:focusable="true"
-
                 app:cardBackgroundColor="@color/surface_card"
-
                 app:cardCornerRadius="18dp"
-
                 app:cardElevation="0dp"
-
                 app:strokeColor="@color/mint_accent"
-
                 app:strokeWidth="1.5dp">
 
-
-
                 <LinearLayout
-
                     android:layout_width="match_parent"
-
                     android:layout_height="wrap_content"
-
                     android:orientation="vertical"
-
                     android:padding="16dp">
 
-
-
                     <RelativeLayout
-
                         android:layout_width="match_parent"
-
                         android:layout_height="wrap_content">
 
-
-
                         <TextView
-
                             android:layout_width="wrap_content"
-
                             android:layout_height="wrap_content"
-
                             android:layout_alignParentStart="true"
-
                             android:layout_centerVertical="true"
-
                             android:text="⚖️ আইনজীবী খুঁজুন ও পরামর্শ নিন"
-
                             android:textColor="@color/text_primary"
-
                             android:textSize="16sp"
-
                             android:textStyle="bold" />
-
-
 
                         <TextView
-
                             android:layout_width="wrap_content"
-
                             android:layout_height="wrap_content"
-
                             android:layout_alignParentEnd="true"
-
                             android:layout_centerVertical="true"
-
                             android:background="@drawable/bg_pill_emergency_green"
-
                             android:paddingHorizontal="8dp"
-
                             android:paddingVertical="2dp"
-
                             android:text="🟢 লাইভ"
-
                             android:textColor="@color/mint_accent"
-
                             android:textSize="11sp"
-
                             android:textStyle="bold" />
-
                     </RelativeLayout>
 
-
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="✓ বাংলাদেশ বার কাউন্সিল সনদী আইনজীবী নেটওয়ার্ক"
+                        android:textColor="@color/mint_accent"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
 
                     <TextView
-
                         android:layout_width="match_parent"
-
                         android:layout_height="wrap_content"
-
                         android:layout_marginTop="6dp"
-
+                        android:lineSpacingExtra="2dp"
                         android:text="আপনার জেলায় জমিজমা, পারিবারিক, দেনমোহর বা ফৌজদারি মামলার অভিজ্ঞ আইনজীবীর সাথে সরাসরি ১-অন-১ পরামর্শ করুন।"
-
                         android:textColor="@color/text_secondary"
-
                         android:textSize="12sp" />
 
-
-
                     <LinearLayout
-
                         android:layout_width="match_parent"
-
                         android:layout_height="wrap_content"
-
-                        android:layout_marginTop="12dp"
-
+                        android:layout_marginTop="14dp"
                         android:gravity="center_vertical"
-
                         android:orientation="horizontal">
 
-
-
-                        <TextView
-
-                            android:layout_width="0dp"
-
-                            android:layout_height="wrap_content"
-
-                            android:layout_weight="1"
-
-                            android:text="বার কাউন্সিল সনদী আইনজীবী"
-
-                            android:textColor="@color/mint_accent"
-
-                            android:textSize="12sp"
-
-                            android:textStyle="bold" />
-
-
-
                         <com.google.android.material.button.MaterialButton
-
                             android:id="@+id/btnMyConsultationsHome"
-
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-
-                            android:layout_width="wrap_content"
-
-                            android:layout_height="38dp"
-
-                            android:layout_marginEnd="8dp"
-
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
                             android:strokeColor="@color/mint_accent"
-
-                            app:strokeWidth="1dp"
-
                             android:text="আমার চ্যাট 💬"
-
                             android:textColor="@color/mint_accent"
-
                             android:textSize="12sp"
-
-                            app:cornerRadius="19dp" />
-
-
+                            android:textStyle="bold"
+                            app:cornerRadius="20dp"
+                            app:strokeWidth="1dp" />
 
                         <com.google.android.material.button.MaterialButton
-
                             android:id="@+id/btnBrowseLawyers"
-
-                            android:layout_width="wrap_content"
-
-                            android:layout_height="38dp"
-
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
                             android:backgroundTint="@color/primary_emerald"
-
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
                             android:text="আইনজীবী তালিকা ➔"
-
                             android:textColor="@color/white"
-
                             android:textSize="12sp"
-
-                            app:cornerRadius="19dp" />
-
+                            android:textStyle="bold"
+                            app:cornerRadius="20dp" />
                     </LinearLayout>
-
                 </LinearLayout>
-
             </com.google.android.material.card.MaterialCardView>
-
-
 
             <!-- 4. Section Title & Explore All Laws Action Button -->
             <RelativeLayout
@@ -803,431 +715,314 @@
 
 
             <!-- 2x2 Law Categories Grid (Row 1) -->
-
             <LinearLayout
-
                 android:layout_width="match_parent"
-
                 android:layout_height="wrap_content"
-
                 android:layout_marginBottom="12dp"
-
                 android:orientation="horizontal">
-
-
 
                 <!-- Card 1: Traffic Law -->
-
                 <com.google.android.material.card.MaterialCardView
-
                     android:id="@+id/cardCategoryTraffic"
-
                     android:layout_width="0dp"
-
-                    android:layout_height="150dp"
-
+                    android:layout_height="152dp"
                     android:layout_marginEnd="6dp"
-
                     android:layout_weight="1"
-
                     android:clickable="true"
-
                     android:focusable="true"
-
                     app:cardBackgroundColor="@color/surface_card"
-
                     app:cardCornerRadius="16dp"
-
                     app:cardElevation="0dp"
-
                     app:rippleColor="@color/mint_accent_alpha"
-
                     app:strokeColor="@color/card_stroke"
-
                     app:strokeWidth="1dp">
 
-
-
                     <LinearLayout
-
                         android:layout_width="match_parent"
-
                         android:layout_height="match_parent"
-
-                        android:gravity="bottom|start"
-
                         android:orientation="vertical"
+                        android:padding="14dp">
 
-                        android:padding="16dp">
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
 
+                            <ImageView
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:layout_alignParentStart="true"
+                                android:layout_centerVertical="true"
+                                android:contentDescription="Traffic Icon"
+                                android:src="@drawable/ic_traffic" />
 
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentEnd="true"
+                                android:layout_centerVertical="true"
+                                android:background="@drawable/bg_pill_emergency_green"
+                                android:paddingHorizontal="7dp"
+                                android:paddingVertical="2dp"
+                                android:text="৪২টি ধারা"
+                                android:textColor="@color/mint_accent"
+                                android:textSize="10sp"
+                                android:textStyle="bold" />
+                        </RelativeLayout>
 
-                        <ImageView
-
-                            android:layout_width="32dp"
-
-                            android:layout_height="32dp"
-
-                            android:layout_marginBottom="12dp"
-
-                            android:contentDescription="Traffic Icon"
-
-                            android:src="@drawable/ic_traffic" />
-
-
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
 
                         <TextView
-
                             android:layout_width="wrap_content"
-
                             android:layout_height="wrap_content"
-
                             android:text="@string/cat_traffic"
-
                             android:textColor="@color/text_primary"
-
-                            android:textSize="15sp"
-
+                            android:textSize="14sp"
                             android:textStyle="bold" />
 
-
-
                         <TextView
-
                             android:layout_width="wrap_content"
-
                             android:layout_height="wrap_content"
-
-                            android:layout_marginTop="2dp"
-
+                            android:layout_marginTop="3dp"
                             android:ellipsize="end"
-
-                            android:maxLines="1"
-
+                            android:lineSpacingExtra="2dp"
+                            android:maxLines="2"
                             android:text="@string/cat_traffic_sub"
-
                             android:textColor="@color/text_secondary"
-
                             android:textSize="11sp" />
-
                     </LinearLayout>
-
                 </com.google.android.material.card.MaterialCardView>
-
-
 
                 <!-- Card 2: Family & Women Rights -->
-
                 <com.google.android.material.card.MaterialCardView
-
                     android:id="@+id/cardCategoryFamily"
-
                     android:layout_width="0dp"
-
-                    android:layout_height="150dp"
-
+                    android:layout_height="152dp"
                     android:layout_marginStart="6dp"
-
                     android:layout_weight="1"
-
                     android:clickable="true"
-
                     android:focusable="true"
-
                     app:cardBackgroundColor="@color/surface_card"
-
                     app:cardCornerRadius="16dp"
-
                     app:cardElevation="0dp"
-
                     app:rippleColor="@color/mint_accent_alpha"
-
                     app:strokeColor="@color/card_stroke"
-
                     app:strokeWidth="1dp">
 
-
-
                     <LinearLayout
-
                         android:layout_width="match_parent"
-
                         android:layout_height="match_parent"
-
-                        android:gravity="bottom|start"
-
                         android:orientation="vertical"
+                        android:padding="14dp">
 
-                        android:padding="16dp">
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
 
+                            <ImageView
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:layout_alignParentStart="true"
+                                android:layout_centerVertical="true"
+                                android:contentDescription="Family Icon"
+                                android:src="@drawable/ic_family" />
 
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentEnd="true"
+                                android:layout_centerVertical="true"
+                                android:background="@drawable/bg_pill_emergency_green"
+                                android:paddingHorizontal="7dp"
+                                android:paddingVertical="2dp"
+                                android:text="১৭০টি ধারা"
+                                android:textColor="@color/mint_accent"
+                                android:textSize="10sp"
+                                android:textStyle="bold" />
+                        </RelativeLayout>
 
-                        <ImageView
-
-                            android:layout_width="32dp"
-
-                            android:layout_height="32dp"
-
-                            android:layout_marginBottom="12dp"
-
-                            android:contentDescription="Family Icon"
-
-                            android:src="@drawable/ic_family" />
-
-
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
 
                         <TextView
-
                             android:layout_width="wrap_content"
-
                             android:layout_height="wrap_content"
-
                             android:text="@string/cat_family"
-
                             android:textColor="@color/text_primary"
-
-                            android:textSize="15sp"
-
+                            android:textSize="14sp"
                             android:textStyle="bold" />
 
-
-
                         <TextView
-
                             android:layout_width="wrap_content"
-
                             android:layout_height="wrap_content"
-
-                            android:layout_marginTop="2dp"
-
+                            android:layout_marginTop="3dp"
                             android:ellipsize="end"
-
-                            android:maxLines="1"
-
+                            android:lineSpacingExtra="2dp"
+                            android:maxLines="2"
                             android:text="@string/cat_family_sub"
-
                             android:textColor="@color/text_secondary"
-
                             android:textSize="11sp" />
-
                     </LinearLayout>
-
                 </com.google.android.material.card.MaterialCardView>
-
             </LinearLayout>
 
-
-
             <!-- 2x2 Law Categories Grid (Row 2) -->
-
             <LinearLayout
-
                 android:layout_width="match_parent"
-
                 android:layout_height="wrap_content"
-
                 android:orientation="horizontal">
 
-
-
                 <!-- Card 3: Tenant & Property Law -->
-
                 <com.google.android.material.card.MaterialCardView
-
                     android:id="@+id/cardCategoryTenant"
-
                     android:layout_width="0dp"
-
-                    android:layout_height="150dp"
-
+                    android:layout_height="152dp"
                     android:layout_marginEnd="6dp"
-
                     android:layout_weight="1"
-
                     android:clickable="true"
-
                     android:focusable="true"
-
                     app:cardBackgroundColor="@color/surface_card"
-
                     app:cardCornerRadius="16dp"
-
                     app:cardElevation="0dp"
-
                     app:rippleColor="@color/mint_accent_alpha"
-
                     app:strokeColor="@color/card_stroke"
-
                     app:strokeWidth="1dp">
 
-
-
                     <LinearLayout
-
                         android:layout_width="match_parent"
-
                         android:layout_height="match_parent"
-
-                        android:gravity="bottom|start"
-
                         android:orientation="vertical"
+                        android:padding="14dp">
 
-                        android:padding="16dp">
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
 
+                            <ImageView
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:layout_alignParentStart="true"
+                                android:layout_centerVertical="true"
+                                android:contentDescription="Tenant Icon"
+                                android:src="@drawable/ic_tenant" />
 
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentEnd="true"
+                                android:layout_centerVertical="true"
+                                android:background="@drawable/bg_pill_emergency_green"
+                                android:paddingHorizontal="7dp"
+                                android:paddingVertical="2dp"
+                                android:text="১৮২টি ধারা"
+                                android:textColor="@color/mint_accent"
+                                android:textSize="10sp"
+                                android:textStyle="bold" />
+                        </RelativeLayout>
 
-                        <ImageView
-
-                            android:layout_width="32dp"
-
-                            android:layout_height="32dp"
-
-                            android:layout_marginBottom="12dp"
-
-                            android:contentDescription="Tenant Icon"
-
-                            android:src="@drawable/ic_tenant" />
-
-
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
 
                         <TextView
-
                             android:layout_width="wrap_content"
-
                             android:layout_height="wrap_content"
-
                             android:text="@string/cat_tenant"
-
                             android:textColor="@color/text_primary"
-
-                            android:textSize="15sp"
-
+                            android:textSize="14sp"
                             android:textStyle="bold" />
 
-
-
                         <TextView
-
                             android:layout_width="wrap_content"
-
                             android:layout_height="wrap_content"
-
-                            android:layout_marginTop="2dp"
-
+                            android:layout_marginTop="3dp"
                             android:ellipsize="end"
-
-                            android:maxLines="1"
-
+                            android:lineSpacingExtra="2dp"
+                            android:maxLines="2"
                             android:text="@string/cat_tenant_sub"
-
                             android:textColor="@color/text_secondary"
-
                             android:textSize="11sp" />
-
                     </LinearLayout>
-
                 </com.google.android.material.card.MaterialCardView>
-
-
 
                 <!-- Card 4: Penal Code / Criminal Law -->
-
                 <com.google.android.material.card.MaterialCardView
-
                     android:id="@+id/cardCategoryPenal"
-
                     android:layout_width="0dp"
-
-                    android:layout_height="150dp"
-
+                    android:layout_height="152dp"
                     android:layout_marginStart="6dp"
-
                     android:layout_weight="1"
-
                     android:clickable="true"
-
                     android:focusable="true"
-
                     app:cardBackgroundColor="@color/surface_card"
-
                     app:cardCornerRadius="16dp"
-
                     app:cardElevation="0dp"
-
                     app:rippleColor="@color/mint_accent_alpha"
-
                     app:strokeColor="@color/card_stroke"
-
                     app:strokeWidth="1dp">
 
-
-
                     <LinearLayout
-
                         android:layout_width="match_parent"
-
                         android:layout_height="match_parent"
-
-                        android:gravity="bottom|start"
-
                         android:orientation="vertical"
+                        android:padding="14dp">
 
-                        android:padding="16dp">
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
 
+                            <ImageView
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:layout_alignParentStart="true"
+                                android:layout_centerVertical="true"
+                                android:contentDescription="Penal Code Icon"
+                                android:src="@drawable/ic_penal" />
 
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentEnd="true"
+                                android:layout_centerVertical="true"
+                                android:background="@drawable/bg_pill_emergency_green"
+                                android:paddingHorizontal="7dp"
+                                android:paddingVertical="2dp"
+                                android:text="১,৩২৬টি ধারা"
+                                android:textColor="@color/mint_accent"
+                                android:textSize="10sp"
+                                android:textStyle="bold" />
+                        </RelativeLayout>
 
-                        <ImageView
-
-                            android:layout_width="32dp"
-
-                            android:layout_height="32dp"
-
-                            android:layout_marginBottom="12dp"
-
-                            android:contentDescription="Penal Code Icon"
-
-                            android:src="@drawable/ic_penal" />
-
-
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
 
                         <TextView
-
                             android:layout_width="wrap_content"
-
                             android:layout_height="wrap_content"
-
                             android:text="@string/cat_penal"
-
                             android:textColor="@color/text_primary"
-
-                            android:textSize="15sp"
-
+                            android:textSize="14sp"
                             android:textStyle="bold" />
 
-
-
                         <TextView
-
                             android:layout_width="wrap_content"
-
                             android:layout_height="wrap_content"
-
-                            android:layout_marginTop="2dp"
-
+                            android:layout_marginTop="3dp"
                             android:ellipsize="end"
-
-                            android:maxLines="1"
-
+                            android:lineSpacingExtra="2dp"
+                            android:maxLines="2"
                             android:text="@string/cat_penal_sub"
-
                             android:textColor="@color/text_secondary"
-
                             android:textSize="11sp" />
-
                     </LinearLayout>
-
                 </com.google.android.material.card.MaterialCardView>
-
             </LinearLayout>
 
             <!-- Master Statute Search & Explorer Card -->

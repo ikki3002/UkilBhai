@@ -1267,7 +1267,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        View btnMyConsultationsHome = findViewById(R.id.btnMyConsultationsHome);
+        MaterialButton btnMyConsultationsHome = findViewById(R.id.btnMyConsultationsHome);
 
         if (btnMyConsultationsHome != null) {
 
@@ -1278,6 +1278,26 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
 
             });
+
+            if (mAuth != null && mAuth.getCurrentUser() != null && mFirestore != null) {
+                String uid = mAuth.getCurrentUser().getUid();
+                mFirestore.collection("chat_rooms")
+                        .whereEqualTo("citizenId", uid)
+                        .addSnapshotListener((snapshots, error) -> {
+                            if (error != null || snapshots == null) return;
+                            int unread = 0;
+                            for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                                Boolean active = doc.getBoolean("isActive");
+                                Long cnt = doc.getLong("unreadCitizenCount");
+                                if ((active == null || active) && cnt != null && cnt > 0) {
+                                    unread += cnt.intValue();
+                                }
+                            }
+                            btnMyConsultationsHome.setText(unread > 0
+                                    ? "আমার চ্যাট 💬 (" + unread + ")"
+                                    : "আমার চ্যাট 💬");
+                        });
+            }
 
         }
 
@@ -1301,8 +1321,17 @@ public class MainActivity extends AppCompatActivity {
         if (cardExploreAllLawsBanner != null) cardExploreAllLawsBanner.setOnClickListener(openAllLawsListener);
 
         if (etSearchQuestion != null) {
-            etSearchQuestion.setFocusableInTouchMode(false);
-            etSearchQuestion.setOnClickListener(openAllLawsListener);
+            etSearchQuestion.setOnEditorActionListener((v, actionId, event) -> {
+                String q = etSearchQuestion.getText().toString().trim();
+                Intent intent = new Intent(MainActivity.this, com.example.ukilbhai.rag.LegalStatuteExplorerActivity.class);
+                intent.putExtra(com.example.ukilbhai.rag.LegalStatuteExplorerActivity.EXTRA_INITIAL_CATEGORY, "all");
+                if (!q.isEmpty()) {
+                    intent.putExtra(com.example.ukilbhai.rag.LegalStatuteExplorerActivity.EXTRA_INITIAL_QUERY, q);
+                    etSearchQuestion.setText("");
+                }
+                startActivity(intent);
+                return true;
+            });
         }
 
         // Category shortcuts
