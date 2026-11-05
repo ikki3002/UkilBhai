@@ -768,23 +768,37 @@
 
 
 
-            <!-- 4. Section Title -->
-
-            <TextView
-
-                android:layout_width="wrap_content"
-
+            <!-- 4. Section Title & Explore All Laws Action Button -->
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp">
 
-                android:layout_marginBottom="16dp"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:text="@string/categories_title"
+                    android:textColor="@color/text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
-                android:text="@string/categories_title"
-
-                android:textColor="@color/text_primary"
-
-                android:textSize="18sp"
-
-                android:textStyle="bold" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnExploreAllLaws"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingHorizontal="8dp"
+                    android:text="সকল আইন দেখুন ➔"
+                    android:textColor="@color/mint_accent"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </RelativeLayout>
 
 
 
@@ -1216,7 +1230,73 @@
 
             </LinearLayout>
 
+            <!-- Master Statute Search & Explorer Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardExploreAllLawsBanner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="80dp"
+                android:clickable="true"
+                android:focusable="true"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:rippleColor="@color/mint_accent_alpha"
+                app:strokeColor="@color/card_stroke_glow"
+                app:strokeWidth="1.2dp">
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="14dp">
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:contentDescription="Search law"
+                        android:src="@drawable/ic_search"
+                        app:tint="@color/mint_accent" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="সকল আইন ও ধারা অনুসন্ধান করুন"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="৩৮টি মূল আইন ও ৩,৫১৮টি ধারা সরাসরি পড়ুন"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_pill_emergency_green"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:text="খুঁজুন ➔"
+                        android:textColor="@color/mint_accent"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 

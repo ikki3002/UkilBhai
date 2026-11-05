@@ -122,6 +122,8 @@ import java.util.Locale;
 
 public class ChatActivity extends AppCompatActivity {
 
+    public static final String EXTRA_INITIAL_PROMPT = "extra_initial_prompt";
+
 
 
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
@@ -291,6 +293,15 @@ public class ChatActivity extends AppCompatActivity {
         // Restore active session or create initial session
 
         restoreOrInitSession();
+
+        // Handle initial prompt from statute explorer or external intent
+        if (getIntent() != null && getIntent().hasExtra(EXTRA_INITIAL_PROMPT)) {
+            String initialPrompt = getIntent().getStringExtra(EXTRA_INITIAL_PROMPT);
+            if (initialPrompt != null && !initialPrompt.trim().isEmpty() && etUserPrompt != null) {
+                etUserPrompt.setText(initialPrompt);
+                etUserPrompt.setSelection(initialPrompt.length());
+            }
+        }
 
     }
 

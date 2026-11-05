@@ -302,6 +302,128 @@ public class LegalDatabaseHelper {
         return list;
     }
 
+    /**
+     * Helper to return SQL WHERE condition for category-based filtering
+     */
+    public static String getCategoryWhereClause(String categoryKey) {
+        if (categoryKey == null) return "1=1";
+        switch (categoryKey.toLowerCase()) {
+            case "traffic":
+                return "(act_title LIKE '%Motor%' OR act_title LIKE '%সড়ক%' OR act_title LIKE '%যানবাহন%' OR section_content LIKE '%rash driving%' OR search_keywords LIKE '%ট্রাফিক%')";
+            case "family":
+                return "(act_title LIKE '%Family%' OR act_title LIKE '%Muslim%' OR act_title LIKE '%Dowry%' OR act_title LIKE '%নারী%' OR act_title LIKE '%পারিবারিক%' OR act_title LIKE '%যৌতুক%' OR act_title LIKE '%বিবাহ%' OR act_title LIKE '%Marriage%')";
+            case "tenant":
+                return "(act_title LIKE '%Property%' OR act_title LIKE '%Rent%' OR act_title LIKE '%বাড়িভাড়া%' OR act_title LIKE '%ভাড়া%' OR act_title LIKE '%সম্পত্তি%' OR act_title LIKE '%Registration%')";
+            case "criminal":
+                return "(act_title LIKE '%Penal%' OR act_title LIKE '%Criminal%' OR act_title LIKE '%Police%' OR act_title LIKE '%মাদক%' OR act_title LIKE '%ফৌজদারি%' OR act_title LIKE '%দণ্ডবিধি%')";
+            case "labour":
+                return "(act_title LIKE '%Contract%' OR act_title LIKE '%Labour%' OR act_title LIKE '%Negotiable%' OR act_title LIKE '%শ্রম%' OR act_title LIKE '%চুক্তি%')";
+            case "all":
+            default:
+                return "1=1";
+        }
+    }
+
+    /**
+     * Total section count for a category
+     */
+    public int getCategoryCount(String categoryKey) {
+        if (!isDatabaseReady()) return 0;
+        String where = getCategoryWhereClause(categoryKey);
+        String sql = "SELECT count(*) FROM sections WHERE " + where;
+        try (Cursor c = database.rawQuery(sql, null)) {
+            if (c.moveToFirst()) return c.getInt(0);
+        } catch (Exception e) {
+            Log.e(TAG, "getCategoryCount failed: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * Fetch sections for a category with limit and offset (for smooth scrolling/pagination)
+     */
+    public List<LegalSection> getSectionsByCategory(String categoryKey, int limit, int offset) {
+        List<LegalSection> list = new ArrayList<>();
+        if (!isDatabaseReady()) return list;
+
+        String where = getCategoryWhereClause(categoryKey);
+        String sql = "SELECT act_title, act_year, section_title, section_content FROM sections " +
+                "WHERE " + where + " ORDER BY id LIMIT ? OFFSET ?";
+
+        try (Cursor cursor = database.rawQuery(sql, new String[]{String.valueOf(limit), String.valueOf(offset)})) {
+            while (cursor.moveToNext()) {
+                String actTitle = cursor.getString(0);
+                String actYear = cursor.getString(1);
+                String sectionTitle = cursor.getString(2);
+                String sectionContent = cursor.getString(3);
+                list.add(new LegalSection(actTitle, actYear, sectionTitle, sectionContent));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "getSectionsByCategory failed: " + e.getMessage());
+        }
+        return list;
+    }
+
+    /**
+     * Dynamic statute explorer search: filter by category + live keyword query.
+     */
+    public List<LegalSection> searchStatuteExplorer(String query, String categoryKey, int limit) {
+        if (query == null || query.trim().isEmpty()) {
+            return getSectionsByCategory(categoryKey, limit, 0);
+        }
+
+        List<LegalSection> list = new ArrayList<>();
+        if (!isDatabaseReady()) return list;
+
+        String trimmed = query.trim();
+        String whereCat = getCategoryWhereClause(categoryKey);
+
+        String pattern = "%" + trimmed + "%";
+        String sql = "SELECT act_title, act_year, section_title, section_content FROM sections " +
+                "WHERE (" + whereCat + ") AND (search_keywords LIKE ? OR section_content LIKE ? OR section_title LIKE ? OR act_title LIKE ?) " +
+                "ORDER BY " +
+                "CASE WHEN section_title LIKE ? THEN 1 WHEN section_content LIKE ? THEN 2 ELSE 3 END, id " +
+                "LIMIT ?";
+
+        try (Cursor cursor = database.rawQuery(sql, new String[]{
+                pattern, pattern, pattern, pattern,
+                "%" + trimmed + "%", trimmed + "%",
+                String.valueOf(limit)
+        })) {
+            while (cursor.moveToNext()) {
+                String actTitle = cursor.getString(0);
+                String actYear = cursor.getString(1);
+                String sectionTitle = cursor.getString(2);
+                String sectionContent = cursor.getString(3);
+                list.add(new LegalSection(actTitle, actYear, sectionTitle, sectionContent));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "searchStatuteExplorer failed: " + e.getMessage());
+        }
+
+        // If list is empty and query has multiple words, try matching first word
+        if (list.isEmpty() && trimmed.contains(" ")) {
+            String firstWord = trimmed.split("\\s+")[0];
+            if (firstWord.length() > 2) {
+                String subPattern = "%" + firstWord + "%";
+                String fallbackSql = "SELECT act_title, act_year, section_title, section_content FROM sections " +
+                        "WHERE (" + whereCat + ") AND (search_keywords LIKE ? OR section_content LIKE ? OR section_title LIKE ?) " +
+                        "ORDER BY id LIMIT ?";
+                try (Cursor cursor = database.rawQuery(fallbackSql, new String[]{subPattern, subPattern, subPattern, String.valueOf(limit)})) {
+                    while (cursor.moveToNext()) {
+                        String actTitle = cursor.getString(0);
+                        String actYear = cursor.getString(1);
+                        String sectionTitle = cursor.getString(2);
+                        String sectionContent = cursor.getString(3);
+                        list.add(new LegalSection(actTitle, actYear, sectionTitle, sectionContent));
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+
+        return list;
+    }
+
     public synchronized void close() {
         if (database != null && database.isOpen()) {
             database.close();
